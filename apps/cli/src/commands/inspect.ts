@@ -1,5 +1,6 @@
 import pc from "picocolors";
 import { observeRepository } from "@eip/observer";
+import { formatDuration } from "@eip/shared";
 
 export async function inspect(path: string) {
   const snapshot = await observeRepository(path);
@@ -15,6 +16,6 @@ export async function inspect(path: string) {
   console.log("Git              :", snapshot.hasGit ? "Yes" : "No");
   console.log("Files            :", snapshot.totalFiles);
   console.log("Directories      :", snapshot.totalDirectories);
-  console.log("Scan Time        :", snapshot.scanDurationMs + "ms");
+  console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }

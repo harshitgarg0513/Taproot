@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm -r build"
+    "build": "turbo run build",
+    "dev": "turbo run dev"
   },
   "dependencies": {
     "chalk": "^5.0.1",
@@ -13,8 +14,11 @@
     "picocolors": "^1.0.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.10.1",
-    "tsup": "^8.3.5",
-    "typescript": "^5.6.3"
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.1",
+    "turbo": "^2.10.5",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,12 +1,13 @@
 {
   "name": "@eip/observer",
   "version": "0.0.1",
+  "type": "module",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./dist/index.js"
-  },
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs --out-dir dist"
+    "build": "tsup src/index.ts --format esm --dts"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.2"
   }
 }
