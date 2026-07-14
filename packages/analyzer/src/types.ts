@@ -1,24 +1,28 @@
-export interface ParsedFunction {
-  name: string;
-  line: number;
-}
+export type SymbolKind =
+  | "class"
+  | "function"
+  | "method"
+  | "interface"
+  | "type"
+  | "enum"
+  | "variable"
+  | "import"
+  | "export";
 
-export interface ParsedClass {
+export interface SymbolNode {
+  id: string;
+  kind: SymbolKind;
   name: string;
+  file: string;
   line: number;
-}
-
-export interface ParsedImport {
-  module: string;
 }
 
 export interface ParsedFile {
   path: string;
-  functions: ParsedFunction[];
-  classes: ParsedClass[];
-  imports: ParsedImport[];
+  symbols: SymbolNode[];
 }
 
 export interface RepositoryAnalysis {
   files: ParsedFile[];
+  symbols: SymbolNode[];
 }

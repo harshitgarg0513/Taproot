@@ -8,8 +8,8 @@
 [34mCLI[39m Target: es2022
 [34mCLI[39m Cleaning output folder
 [34mESM[39m Build start
-[32mESM[39m [1mdist/index.js [22m[32m1.79 KB[39m
+[32mESM[39m [1mdist/index.js [22m[32m2.45 KB[39m
 [32mESM[39m ⚡️ Build success in 14ms
 DTS Build start
-DTS ⚡️ Build success in 367ms
+DTS ⚡️ Build success in 309ms
 DTS dist/index.d.ts 20.00 B

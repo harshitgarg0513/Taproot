@@ -2,7 +2,7 @@ import fg from "fast-glob";
 import { readFile } from "node:fs/promises";
 
 import { parse } from "./parser.js";
-import { walkTree } from "./walker.js";
+import { buildSymbolTable } from "./symbolWalker.js";
 import { RepositoryAnalysis } from "./types.js";
 
 export async function analyzeRepository(root: string): Promise<RepositoryAnalysis> {
@@ -12,15 +12,19 @@ export async function analyzeRepository(root: string): Promise<RepositoryAnalysi
     ignore: ["**/node_modules/**", "**/dist/**"],
   });
 
-  const result: RepositoryAnalysis = {
+  const analysis: RepositoryAnalysis = {
     files: [],
+    symbols: [],
   };
 
   for (const file of files) {
-    const code = await readFile(file, "utf8");
-    const tree = parse(code);
-    result.files.push(walkTree(tree, file));
+    const source = await readFile(file, "utf8");
+    const tree = parse(source);
+    const parsed = buildSymbolTable(tree, file);
+
+    analysis.files.push(parsed);
+    analysis.symbols.push(...parsed.symbols);
   }
 
-  return result;
+  return analysis;
 }

@@ -1,24 +1,20 @@
-interface ParsedFunction {
+type SymbolKind = "class" | "function" | "method" | "interface" | "type" | "enum" | "variable" | "import" | "export";
+interface SymbolNode {
+    id: string;
+    kind: SymbolKind;
     name: string;
+    file: string;
     line: number;
-}
-interface ParsedClass {
-    name: string;
-    line: number;
-}
-interface ParsedImport {
-    module: string;
 }
 interface ParsedFile {
     path: string;
-    functions: ParsedFunction[];
-    classes: ParsedClass[];
-    imports: ParsedImport[];
+    symbols: SymbolNode[];
 }
 interface RepositoryAnalysis {
     files: ParsedFile[];
+    symbols: SymbolNode[];
 }
 
 declare function analyzeRepository(root: string): Promise<RepositoryAnalysis>;
 
-export { type ParsedClass, type ParsedFile, type ParsedFunction, type ParsedImport, type RepositoryAnalysis, analyzeRepository };
+export { type ParsedFile, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

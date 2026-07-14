@@ -19,14 +19,25 @@ export async function inspect(path: string) {
   console.log("Files            :", snapshot.totalFiles);
   console.log("Directories      :", snapshot.totalDirectories);
 
-  const functionCount = analysis.files.reduce((a, b) => a + b.functions.length, 0);
-  const classCount = analysis.files.reduce((a, b) => a + b.classes.length, 0);
-  const importCount = analysis.files.reduce((a, b) => a + b.imports.length, 0);
+  const classes = analysis.symbols.filter((s) => s.kind === "class").length;
+  const functions = analysis.symbols.filter((s) => s.kind === "function").length;
+  const methods = analysis.symbols.filter((s) => s.kind === "method").length;
+  const interfaces = analysis.symbols.filter((s) => s.kind === "interface").length;
+  const types = analysis.symbols.filter((s) => s.kind === "type").length;
+  const enums = analysis.symbols.filter((s) => s.kind === "enum").length;
+  const imports = analysis.symbols.filter((s) => s.kind === "import").length;
+  const exportsCount = analysis.symbols.filter((s) => s.kind === "export").length;
 
   console.log("TS Files         :", analysis.files.length);
-  console.log("Classes          :", classCount);
-  console.log("Functions        :", functionCount);
-  console.log("Imports          :", importCount);
+  console.log("Symbols          :", analysis.symbols.length);
+  console.log("Classes          :", classes);
+  console.log("Interfaces       :", interfaces);
+  console.log("Enums            :", enums);
+  console.log("Types            :", types);
+  console.log("Functions        :", functions);
+  console.log("Methods          :", methods);
+  console.log("Imports          :", imports);
+  console.log("Exports          :", exportsCount);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }
