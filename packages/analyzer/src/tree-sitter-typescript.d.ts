@@ -1,7 +1,7 @@
 declare module "tree-sitter-typescript" {
   interface TreeSitterLanguageModule {
-    typescript: any;
-    tsx: any;
+    typescript: unknown;
+    tsx: unknown;
   }
 
   const treeSitterTypescript: TreeSitterLanguageModule;
