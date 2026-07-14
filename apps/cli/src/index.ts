@@ -16,6 +16,7 @@ import { classify } from "./commands/classify";
 import { config as configCommand } from "./commands/config.js";
 import { entities } from "./commands/entities";
 import { explainCommand } from "./commands/explain.js";
+import { risk } from "./commands/risk.js";
 
 const program = new Command();
 
@@ -125,6 +126,14 @@ program
   .argument("<component>")
   .action((repo: string, component: string) => {
     void explainCommand(repo, component);
+  });
+
+program
+  .command("risk")
+  .argument("<repo>")
+  .argument("<target>")
+  .action((repo: string, target: string) => {
+    void risk(repo, target);
   });
 
 program.parse();
