@@ -19,7 +19,7 @@ async function scanRepository(root) {
       withFileTypes: true
     });
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
+      if (IGNORE.has(entry.name) || entry.name.startsWith(".")) continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         result.directories++;
@@ -60,10 +60,8 @@ async function detectProject(root, extensions) {
     else if (deps.next) framework = "Next.js";
     else if (deps.react) framework = "React";
     else if (deps.express) framework = "Express";
-    if (pkg.packageManager?.startsWith("pnpm"))
-      packageManager = "pnpm";
-    else if (pkg.packageManager?.startsWith("yarn"))
-      packageManager = "yarn";
+    if (pkg.packageManager?.startsWith("pnpm")) packageManager = "pnpm";
+    else if (pkg.packageManager?.startsWith("yarn")) packageManager = "yarn";
     else packageManager = "npm";
   }
   return {

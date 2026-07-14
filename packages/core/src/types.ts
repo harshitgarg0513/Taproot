@@ -1,4 +1,5 @@
 import type { EipConfig } from "@eip/config";
+import type { Entity } from "@eip/analyzer";
 import { BuildMetrics } from "./performance/index.js";
 
 export interface RepositoryModel {
@@ -39,6 +40,7 @@ export interface RepositoryModel {
     file: string;
     line: number;
   }>;
+  entities: Entity[];
   relationships: Array<{
     from: string;
     to: string;

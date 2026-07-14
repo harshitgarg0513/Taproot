@@ -54,6 +54,7 @@ export async function buildRepositoryModel(
     },
     components: analysis.components,
     symbols: analysis.symbols,
+    entities: analysis.entities,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: {
@@ -70,7 +71,7 @@ export async function buildRepositoryModel(
   );
   const symbolIndex = new Map(symbols.map((symbol) => [symbol.id, symbol]));
 
-  const model = {
+  const model: RepositoryModel = {
     config,
     metrics: {
       observerMs,
@@ -82,6 +83,7 @@ export async function buildRepositoryModel(
     symbolIndex,
     components,
     symbols,
+    entities: analysis.entities,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: graph,

@@ -23,10 +23,18 @@ interface CallRelationship {
     file: string;
 }
 type ComponentType = "Controller" | "Service" | "Module" | "Repository" | "Entity" | "Unknown";
+type EntityKind = "File" | "Class" | "Function" | "Method" | "Interface" | "Type" | "Enum" | "Variable";
 interface Component {
     id: string;
     name: string;
     type: ComponentType;
+    file: string;
+    line: number;
+}
+interface Entity {
+    id: string;
+    kind: EntityKind;
+    name: string;
     file: string;
     line: number;
 }
@@ -36,8 +44,9 @@ interface RepositoryAnalysis {
     relationships: Relationship[];
     components: Component[];
     callGraph: CallRelationship[];
+    entities: Entity[];
 }
 
 declare function analyzeRepository(root: string): Promise<Result<RepositoryAnalysis>>;
 
-export { type CallRelationship, type Component, type ComponentType, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };
+export { type CallRelationship, type Component, type ComponentType, type Entity, type EntityKind, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

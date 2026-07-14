@@ -13,6 +13,8 @@ import { search } from "./commands/search";
 import { cache } from "./commands/cache";
 import { benchmark } from "./commands/benchmark";
 import { config as configCommand } from "./commands/config.js";
+import { entities } from "./commands/entities";
+import { explain } from "./commands/explain.js";
 
 const program = new Command();
 
@@ -100,6 +102,21 @@ program
   .argument("[path]", ".")
   .action((targetPath: string) => {
     void configCommand(targetPath);
+  });
+
+program
+  .command("entities")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void entities(targetPath);
+  });
+
+program
+  .command("explain")
+  .argument("<repo>")
+  .argument("<component>")
+  .action((repo: string, component: string) => {
+    void explain(repo, component);
   });
 
 program.parse();

@@ -1,4 +1,5 @@
 import { EipConfig } from '@eip/config';
+import { Entity } from '@eip/analyzer';
 import { Result } from '@eip/shared';
 
 declare class Timer {
@@ -45,6 +46,7 @@ interface RepositoryModel {
         file: string;
         line: number;
     }>;
+    entities: Entity[];
     relationships: Array<{
         from: string;
         to: string;
@@ -135,4 +137,21 @@ declare function cacheSize(): number;
 
 declare function createCacheKey(repo: string): string;
 
-export { type BuildMetrics, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, Timer, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, findComponent, findSymbol, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };
+interface ExplainResult {
+    component: string;
+    type: string;
+    file: string;
+    symbols: string[];
+    imports: string[];
+    dependencies: string[];
+    callers: string[];
+    callees: string[];
+    summary: string;
+}
+declare function explainComponent(model: RepositoryModel, name: string): ExplainResult | null;
+
+declare function formatExplain(result: ExplainResult): void;
+
+declare function buildSummary(result: ExplainResult): string;
+
+export { type BuildMetrics, type ExplainResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, Timer, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, buildSummary, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explainComponent, findComponent, findSymbol, formatExplain, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };

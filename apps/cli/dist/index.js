@@ -33,7 +33,11 @@ async function components(repo) {
   console.log("Components");
   console.log("-------------------------");
   for (const component of analysis.components) {
-    console.log(`${component.type.padEnd(15)}`, component.name.padEnd(30), `(${component.file.split("/").pop()})`);
+    console.log(
+      `${component.type.padEnd(15)}`,
+      component.name.padEnd(30),
+      `(${component.file.split("/").pop()})`
+    );
   }
   console.log();
 }
@@ -86,13 +90,19 @@ async function inspect(path) {
   console.log("Files            :", snapshot.totalFiles);
   console.log("Directories      :", snapshot.totalDirectories);
   const classes = analysis.symbols.filter((s) => s.kind === "class").length;
-  const functions = analysis.symbols.filter((s) => s.kind === "function").length;
+  const functions = analysis.symbols.filter(
+    (s) => s.kind === "function"
+  ).length;
   const methods = analysis.symbols.filter((s) => s.kind === "method").length;
-  const interfaces = analysis.symbols.filter((s) => s.kind === "interface").length;
+  const interfaces = analysis.symbols.filter(
+    (s) => s.kind === "interface"
+  ).length;
   const types = analysis.symbols.filter((s) => s.kind === "type").length;
   const enums = analysis.symbols.filter((s) => s.kind === "enum").length;
   const imports = analysis.symbols.filter((s) => s.kind === "import").length;
-  const exportsCount = analysis.symbols.filter((s) => s.kind === "export").length;
+  const exportsCount = analysis.symbols.filter(
+    (s) => s.kind === "export"
+  ).length;
   console.log("TS Files         :", analysis.files.length);
   console.log("Symbols          :", analysis.symbols.length);
   console.log("Classes          :", classes);
@@ -105,11 +115,21 @@ async function inspect(path) {
   console.log("Exports          :", exportsCount);
   console.log("Relationships    :", analysis.relationships.length);
   console.log("Function Calls   :", analysis.callGraph.length);
-  const controllerCount = analysis.components.filter((component) => component.type === "Controller").length;
-  const serviceCount = analysis.components.filter((component) => component.type === "Service").length;
-  const moduleCount = analysis.components.filter((component) => component.type === "Module").length;
-  const repositoryCount = analysis.components.filter((component) => component.type === "Repository").length;
-  const entityCount = analysis.components.filter((component) => component.type === "Entity").length;
+  const controllerCount = analysis.components.filter(
+    (component) => component.type === "Controller"
+  ).length;
+  const serviceCount = analysis.components.filter(
+    (component) => component.type === "Service"
+  ).length;
+  const moduleCount = analysis.components.filter(
+    (component) => component.type === "Module"
+  ).length;
+  const repositoryCount = analysis.components.filter(
+    (component) => component.type === "Repository"
+  ).length;
+  const entityCount = analysis.components.filter(
+    (component) => component.type === "Entity"
+  ).length;
   console.log("Components       :", analysis.components.length);
   console.log("Controllers      :", controllerCount);
   console.log("Services         :", serviceCount);
@@ -137,7 +157,9 @@ async function query(repo, type, value) {
     }
     case "symbol": {
       const symbols = findSymbol(model2, value);
-      console.log(symbols.length > 0 ? symbols : `No symbol named "${value}" found.`);
+      console.log(
+        symbols.length > 0 ? symbols : `No symbol named "${value}" found.`
+      );
       break;
     }
     default:
@@ -291,6 +313,33 @@ async function config(repo) {
   console.log(JSON.stringify(cfg, null, 2));
 }
 
+// src/commands/entities.ts
+import { buildRepositoryModel as buildRepositoryModel6 } from "@eip/core";
+async function entities(repo) {
+  const result = await buildRepositoryModel6(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  console.table(result.data.entities);
+}
+
+// src/commands/explain.ts
+import { buildRepositoryModel as buildRepositoryModel7, explainComponent, formatExplain } from "@eip/core";
+async function explain(repo, target) {
+  const result = await buildRepositoryModel7(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const explanation = explainComponent(result.data, target);
+  if (!explanation) {
+    console.log("Component not found.");
+    return;
+  }
+  formatExplain(explanation);
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -328,5 +377,11 @@ program.command("benchmark").argument("[path]", ".").action((targetPath) => {
 });
 program.command("config").argument("[path]", ".").action((targetPath) => {
   void config(targetPath);
+});
+program.command("entities").argument("[path]", ".").action((targetPath) => {
+  void entities(targetPath);
+});
+program.command("explain").argument("<repo>").argument("<component>").action((repo, component) => {
+  void explain(repo, component);
 });
 program.parse();

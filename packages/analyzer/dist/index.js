@@ -16,7 +16,9 @@ function buildDependencyGraph(analysis) {
       if (!match) continue;
       const specifier = match[1];
       if (!specifier.startsWith(".")) continue;
-      const absolute = path.normalize(path.resolve(path.dirname(file.path), specifier + ".ts"));
+      const absolute = path.normalize(
+        path.resolve(path.dirname(file.path), specifier + ".ts")
+      );
       if (!projectFiles.has(absolute)) continue;
       relationships.push({
         from: file.path,
@@ -55,26 +57,68 @@ function buildMasterWalker(tree, file) {
   function visit(node) {
     switch (node.type) {
       case "class_declaration":
-        add(parsed, "class", node.childForFieldName("name")?.text ?? "Anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "class",
+          node.childForFieldName("name")?.text ?? "Anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "function_declaration":
-        add(parsed, "function", node.childForFieldName("name")?.text ?? "anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "function",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "method_definition":
-        add(parsed, "method", node.childForFieldName("name")?.text ?? "anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "method",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "interface_declaration":
-        add(parsed, "interface", node.childForFieldName("name")?.text ?? "anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "interface",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "type_alias_declaration":
-        add(parsed, "type", node.childForFieldName("name")?.text ?? "anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "type",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "enum_declaration":
-        add(parsed, "enum", node.childForFieldName("name")?.text ?? "anonymous", file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "enum",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "lexical_declaration":
       case "variable_declaration":
-        add(parsed, "variable", node.text.substring(0, 40), file, node.startPosition.row + 1);
+        add(
+          parsed,
+          "variable",
+          node.text.substring(0, 40),
+          file,
+          node.startPosition.row + 1
+        );
         break;
       case "import_statement":
         add(parsed, "import", node.text, file, node.startPosition.row + 1);
@@ -177,6 +221,71 @@ function buildCallGraph(tree, file) {
   return calls;
 }
 
+// src/entity/extractor.ts
+function extractEntities(tree, file) {
+  const entities = [];
+  function push(kind, name, line) {
+    entities.push({
+      id: `${file}:${line}:${kind}:${name}`,
+      kind,
+      name,
+      file,
+      line
+    });
+  }
+  function visit(node) {
+    switch (node.type) {
+      case "class_declaration":
+        push(
+          "Class",
+          node.childForFieldName("name")?.text ?? "Anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+      case "function_declaration":
+        push(
+          "Function",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+      case "method_definition":
+        push(
+          "Method",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+      case "interface_declaration":
+        push(
+          "Interface",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+      case "enum_declaration":
+        push(
+          "Enum",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+      case "type_alias_declaration":
+        push(
+          "Type",
+          node.childForFieldName("name")?.text ?? "anonymous",
+          node.startPosition.row + 1
+        );
+        break;
+    }
+    for (const child of node.children) {
+      visit(child);
+    }
+  }
+  visit(tree.rootNode);
+  return entities;
+}
+
 // src/analyzer.ts
 import { err, ok } from "@eip/shared";
 async function analyzeRepository(root) {
@@ -191,7 +300,8 @@ async function analyzeRepository(root) {
       symbols: [],
       relationships: [],
       components: [],
-      callGraph: []
+      callGraph: [],
+      entities: []
     };
     for (const file of files) {
       const source = await readFile(file, "utf8");
@@ -200,6 +310,8 @@ async function analyzeRepository(root) {
       analysis.files.push(parsed);
       analysis.symbols.push(...parsed.symbols);
       analysis.callGraph.push(...buildCallGraph(tree, file));
+      const entities = extractEntities(tree, file);
+      analysis.entities.push(...entities);
     }
     analysis.relationships = buildDependencyGraph(analysis);
     const program = createProgram(files);
@@ -211,7 +323,9 @@ async function analyzeRepository(root) {
     analysis.components = decoratorComponents;
     return ok(analysis);
   } catch (error) {
-    return err(error instanceof Error ? error : new Error("Failed to analyze repository"));
+    return err(
+      error instanceof Error ? error : new Error("Failed to analyze repository")
+    );
   }
 }
 export {

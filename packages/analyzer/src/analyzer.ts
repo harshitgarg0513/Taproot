@@ -7,6 +7,7 @@ import { buildMasterWalker } from "./parser/masterWalker.js";
 import { createProgram } from "./tsCompiler.js";
 import { extractDecoratorComponents } from "./component/decoratorExtractor.js";
 import { buildCallGraph } from "./graph/callGraph.js";
+import { extractEntities } from "./entity/extractor.js";
 import { Component, RepositoryAnalysis } from "./types.js";
 import { Result, err, ok } from "@eip/shared";
 
@@ -26,6 +27,7 @@ export async function analyzeRepository(
       relationships: [],
       components: [],
       callGraph: [],
+      entities: [],
     };
 
     for (const file of files) {
@@ -36,6 +38,9 @@ export async function analyzeRepository(
       analysis.files.push(parsed);
       analysis.symbols.push(...parsed.symbols);
       analysis.callGraph.push(...buildCallGraph(tree, file));
+
+      const entities = extractEntities(tree, file);
+      analysis.entities.push(...entities);
     }
 
     analysis.relationships = buildDependencyGraph(analysis);

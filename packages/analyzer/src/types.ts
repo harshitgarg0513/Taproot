@@ -37,10 +37,28 @@ export interface CallRelationship {
 export type ComponentType =
   "Controller" | "Service" | "Module" | "Repository" | "Entity" | "Unknown";
 
+export type EntityKind =
+  | "File"
+  | "Class"
+  | "Function"
+  | "Method"
+  | "Interface"
+  | "Type"
+  | "Enum"
+  | "Variable";
+
 export interface Component {
   id: string;
   name: string;
   type: ComponentType;
+  file: string;
+  line: number;
+}
+
+export interface Entity {
+  id: string;
+  kind: EntityKind;
+  name: string;
   file: string;
   line: number;
 }
@@ -51,4 +69,5 @@ export interface RepositoryAnalysis {
   relationships: Relationship[];
   components: Component[];
   callGraph: CallRelationship[];
+  entities: Entity[];
 }
