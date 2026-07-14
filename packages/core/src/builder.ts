@@ -55,6 +55,7 @@ export async function buildRepositoryModel(
     components: analysis.components,
     symbols: analysis.symbols,
     entities: analysis.entities,
+    classified: analysis.classified,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: {
@@ -84,6 +85,7 @@ export async function buildRepositoryModel(
     components,
     symbols,
     entities: analysis.entities,
+    classified: analysis.classified,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: graph,

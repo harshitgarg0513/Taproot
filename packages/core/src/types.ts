@@ -1,5 +1,5 @@
 import type { EipConfig } from "@eip/config";
-import type { Entity } from "@eip/analyzer";
+import type { ClassifiedEntity, Entity } from "@eip/analyzer";
 import { BuildMetrics } from "./performance/index.js";
 
 export interface RepositoryModel {
@@ -41,6 +41,7 @@ export interface RepositoryModel {
     line: number;
   }>;
   entities: Entity[];
+  classified: ClassifiedEntity[];
   relationships: Array<{
     from: string;
     to: string;

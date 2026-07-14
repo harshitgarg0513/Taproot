@@ -1,5 +1,5 @@
 import { EipConfig } from '@eip/config';
-import { Entity } from '@eip/analyzer';
+import { Entity, ClassifiedEntity } from '@eip/analyzer';
 import { Result } from '@eip/shared';
 
 declare class Timer {
@@ -47,6 +47,7 @@ interface RepositoryModel {
         line: number;
     }>;
     entities: Entity[];
+    classified: ClassifiedEntity[];
     relationships: Array<{
         from: string;
         to: string;

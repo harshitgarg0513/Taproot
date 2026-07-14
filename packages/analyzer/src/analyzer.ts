@@ -8,6 +8,7 @@ import { createProgram } from "./tsCompiler.js";
 import { extractDecoratorComponents } from "./component/decoratorExtractor.js";
 import { buildCallGraph } from "./graph/callGraph.js";
 import { extractEntities } from "./entity/extractor.js";
+import { classifyEntity } from "./classifier/classifier.js";
 import { Component, RepositoryAnalysis } from "./types.js";
 import { Result, err, ok } from "@eip/shared";
 
@@ -28,6 +29,7 @@ export async function analyzeRepository(
       components: [],
       callGraph: [],
       entities: [],
+      classified: [],
     };
 
     for (const file of files) {
@@ -43,6 +45,7 @@ export async function analyzeRepository(
       analysis.entities.push(...entities);
     }
 
+    analysis.classified.push(...analysis.entities.map(classifyEntity));
     analysis.relationships = buildDependencyGraph(analysis);
 
     const program = createProgram(files);

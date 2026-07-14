@@ -12,6 +12,7 @@ import { impact } from "./commands/impact";
 import { search } from "./commands/search";
 import { cache } from "./commands/cache";
 import { benchmark } from "./commands/benchmark";
+import { classify } from "./commands/classify";
 import { config as configCommand } from "./commands/config.js";
 import { entities } from "./commands/entities";
 import { explain } from "./commands/explain.js";
@@ -109,6 +110,13 @@ program
   .argument("[path]", ".")
   .action((targetPath: string) => {
     void entities(targetPath);
+  });
+
+program
+  .command("classify")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void classify(targetPath);
   });
 
 program

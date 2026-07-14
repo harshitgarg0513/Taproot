@@ -286,6 +286,70 @@ function extractEntities(tree, file) {
   return entities;
 }
 
+// src/classifier/signals.ts
+function collectSignals(entity) {
+  const signals = [];
+  const n = entity.name.toLowerCase();
+  const f = entity.file.toLowerCase();
+  const suffixes = [
+    { suffix: "service", score: 0.4 },
+    { suffix: "controller", score: 0.4 },
+    { suffix: "module", score: 0.4 },
+    { suffix: "repository", score: 0.4 }
+  ];
+  for (const { suffix, score } of suffixes) {
+    if (n.endsWith(suffix) || n.includes(suffix)) {
+      signals.push({ name: `name:${suffix}`, score });
+    }
+    if (f.includes(`/` + suffix) || f.includes(`.${suffix}.`) || f.endsWith(`.${suffix}.ts`)) {
+      signals.push({ name: `folder:${suffix}`, score: score * 0.75 });
+      signals.push({ name: `file:${suffix}`, score: score * 0.75 });
+    }
+  }
+  if (n.endsWith("service") || f.includes("/service") || f.endsWith(".service.ts")) {
+    signals.push({ name: "name:service", score: 0.4 });
+  }
+  if (n.endsWith("controller") || f.includes("/controller") || f.endsWith(".controller.ts")) {
+    signals.push({ name: "name:controller", score: 0.4 });
+  }
+  if (n.endsWith("module") || f.includes("/module") || f.endsWith(".module.ts")) {
+    signals.push({ name: "name:module", score: 0.4 });
+  }
+  if (n.endsWith("repository") || f.includes("/repository") || f.endsWith(".repository.ts")) {
+    signals.push({ name: "name:repository", score: 0.4 });
+  }
+  return signals;
+}
+
+// src/classifier/score.ts
+function scoreSignals(signals) {
+  const score = /* @__PURE__ */ new Map();
+  for (const signal of signals) {
+    const label = signal.name.split(":")[1];
+    score.set(label, (score.get(label) ?? 0) + signal.score);
+  }
+  return score;
+}
+
+// src/classifier/classifier.ts
+function classifyEntity(entity) {
+  const signals = collectSignals(entity);
+  const scores = scoreSignals(signals);
+  const labels = [];
+  for (const [type, confidence] of scores) {
+    labels.push({
+      type,
+      confidence,
+      signals
+    });
+  }
+  labels.sort((a, b) => b.confidence - a.confidence);
+  return {
+    entity,
+    labels
+  };
+}
+
 // src/analyzer.ts
 import { err, ok } from "@eip/shared";
 async function analyzeRepository(root) {
@@ -301,7 +365,8 @@ async function analyzeRepository(root) {
       relationships: [],
       components: [],
       callGraph: [],
-      entities: []
+      entities: [],
+      classified: []
     };
     for (const file of files) {
       const source = await readFile(file, "utf8");
@@ -313,6 +378,7 @@ async function analyzeRepository(root) {
       const entities = extractEntities(tree, file);
       analysis.entities.push(...entities);
     }
+    analysis.classified.push(...analysis.entities.map(classifyEntity));
     analysis.relationships = buildDependencyGraph(analysis);
     const program = createProgram(files);
     const decoratorComponents = [];

@@ -50,7 +50,8 @@ function resolveComponentFromTarget(model: RepositoryModel, target: string) {
 
   if (matchingSymbol) {
     const existingComponent = Array.from(model.components).find(
-      (entry) => normalizeTarget(entry.file) === normalizeTarget(matchingSymbol.file),
+      (entry) =>
+        normalizeTarget(entry.file) === normalizeTarget(matchingSymbol.file),
     );
 
     if (existingComponent) {
@@ -66,9 +67,10 @@ function resolveComponentFromTarget(model: RepositoryModel, target: string) {
     };
   }
 
-  const byFilePathOnly = Array.from(model.components).find((entry) =>
-    normalizeTarget(entry.file).includes(normalizedTarget) ||
-    normalizedTarget.includes(normalizeTarget(entry.file)),
+  const byFilePathOnly = Array.from(model.components).find(
+    (entry) =>
+      normalizeTarget(entry.file).includes(normalizedTarget) ||
+      normalizedTarget.includes(normalizeTarget(entry.file)),
   );
 
   if (byFilePathOnly) {

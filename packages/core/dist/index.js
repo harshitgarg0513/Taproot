@@ -175,6 +175,7 @@ async function buildRepositoryModel(repo) {
     components: analysis.components,
     symbols: analysis.symbols,
     entities: analysis.entities,
+    classified: analysis.classified,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: {
@@ -202,6 +203,7 @@ async function buildRepositoryModel(repo) {
     components,
     symbols,
     entities: analysis.entities,
+    classified: analysis.classified,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph,
     knowledgeGraph: graph

@@ -63,6 +63,20 @@ export interface Entity {
   line: number;
 }
 
+export interface ClassificationSignal {
+  name: string;
+  score: number;
+}
+
+export interface ClassifiedEntity {
+  entity: Entity;
+  labels: {
+    type: string;
+    confidence: number;
+    signals: ClassificationSignal[];
+  }[];
+}
+
 export interface RepositoryAnalysis {
   files: ParsedFile[];
   symbols: SymbolNode[];
@@ -70,4 +84,5 @@ export interface RepositoryAnalysis {
   components: Component[];
   callGraph: CallRelationship[];
   entities: Entity[];
+  classified: ClassifiedEntity[];
 }

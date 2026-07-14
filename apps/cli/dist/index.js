@@ -306,6 +306,21 @@ async function benchmark(repo) {
   console.log("Total :", total.toFixed(2), "ms");
 }
 
+// src/commands/classify.ts
+import { buildRepositoryModel as buildRepositoryModel6 } from "@eip/core";
+async function classify(repo) {
+  const result = await buildRepositoryModel6(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  for (const entity of result.data.classified) {
+    console.log();
+    console.log(entity.entity.name);
+    console.table(entity.labels);
+  }
+}
+
 // src/commands/config.ts
 import { loadConfig } from "@eip/config";
 async function config(repo) {
@@ -314,9 +329,9 @@ async function config(repo) {
 }
 
 // src/commands/entities.ts
-import { buildRepositoryModel as buildRepositoryModel6 } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel7 } from "@eip/core";
 async function entities(repo) {
-  const result = await buildRepositoryModel6(repo);
+  const result = await buildRepositoryModel7(repo);
   if (!result.success) {
     console.error(result.error);
     return;
@@ -325,9 +340,9 @@ async function entities(repo) {
 }
 
 // src/commands/explain.ts
-import { buildRepositoryModel as buildRepositoryModel7, explainComponent, formatExplain } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel8, explainComponent, formatExplain } from "@eip/core";
 async function explain(repo, target) {
-  const result = await buildRepositoryModel7(repo);
+  const result = await buildRepositoryModel8(repo);
   if (!result.success) {
     console.error(result.error);
     return;
@@ -380,6 +395,9 @@ program.command("config").argument("[path]", ".").action((targetPath) => {
 });
 program.command("entities").argument("[path]", ".").action((targetPath) => {
   void entities(targetPath);
+});
+program.command("classify").argument("[path]", ".").action((targetPath) => {
+  void classify(targetPath);
 });
 program.command("explain").argument("<repo>").argument("<component>").action((repo, component) => {
   void explain(repo, component);

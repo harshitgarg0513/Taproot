@@ -38,6 +38,18 @@ interface Entity {
     file: string;
     line: number;
 }
+interface ClassificationSignal {
+    name: string;
+    score: number;
+}
+interface ClassifiedEntity {
+    entity: Entity;
+    labels: {
+        type: string;
+        confidence: number;
+        signals: ClassificationSignal[];
+    }[];
+}
 interface RepositoryAnalysis {
     files: ParsedFile[];
     symbols: SymbolNode[];
@@ -45,8 +57,9 @@ interface RepositoryAnalysis {
     components: Component[];
     callGraph: CallRelationship[];
     entities: Entity[];
+    classified: ClassifiedEntity[];
 }
 
 declare function analyzeRepository(root: string): Promise<Result<RepositoryAnalysis>>;
 
-export { type CallRelationship, type Component, type ComponentType, type Entity, type EntityKind, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };
+export { type CallRelationship, type ClassificationSignal, type ClassifiedEntity, type Component, type ComponentType, type Entity, type EntityKind, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

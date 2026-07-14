@@ -1,4 +1,8 @@
-import { buildRepositoryModel, explainComponent, formatExplain } from "@eip/core";
+import {
+  buildRepositoryModel,
+  explainComponent,
+  formatExplain,
+} from "@eip/core";
 
 export async function explain(repo: string, target: string) {
   const result = await buildRepositoryModel(repo);
