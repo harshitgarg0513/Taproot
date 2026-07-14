@@ -1,18 +1,76 @@
 // src/builder.ts
 import { analyzeRepository } from "@eip/analyzer";
 import { err, ok } from "@eip/shared";
+
+// src/cache/cache.ts
+var cache = /* @__PURE__ */ new Map();
+function getCachedModel(key) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  return entry.model;
+}
+function setCachedModel(key, model) {
+  cache.set(key, {
+    model,
+    timestamp: Date.now()
+  });
+}
+function clearCache() {
+  cache.clear();
+}
+function cacheSize() {
+  return cache.size;
+}
+
+// src/cache/key.ts
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+function walk(dir, files) {
+  const entries = fs.readdirSync(dir, {
+    withFileTypes: true
+  });
+  for (const entry of entries) {
+    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, files);
+    else files.push(full);
+  }
+}
+function createCacheKey(repo) {
+  const files = [];
+  walk(repo, files);
+  const hash = crypto.createHash("sha256");
+  files.sort();
+  for (const file of files) {
+    const stat = fs.statSync(file);
+    hash.update(file);
+    hash.update(stat.mtimeMs.toString());
+    hash.update(stat.size.toString());
+  }
+  return hash.digest("hex");
+}
+
+// src/builder.ts
 async function buildRepositoryModel(repo) {
+  const key = createCacheKey(repo);
+  const cached = getCachedModel(key);
+  if (cached) {
+    return ok(cached);
+  }
   const analysisResult = await analyzeRepository(repo);
   if (!analysisResult.success) {
     return err(analysisResult.error);
   }
   const analysis = analysisResult.data;
-  return ok({
+  const model = {
     components: analysis.components,
     symbols: analysis.symbols,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph
-  });
+  };
+  setCachedModel(key, model);
+  return ok(model);
 }
 
 // src/query/component.ts
@@ -169,11 +227,16 @@ export {
   buildKnowledge,
   buildKnowledgeGraph,
   buildRepositoryModel,
+  cacheSize,
+  clearCache,
+  createCacheKey,
   dependenciesOf,
   dependentsOf,
   findComponent,
   findSymbol,
+  getCachedModel,
   impactedFiles,
   listComponents,
-  searchRepository
+  searchRepository,
+  setCachedModel
 };

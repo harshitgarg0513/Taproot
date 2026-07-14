@@ -247,6 +247,22 @@ async function search(repo, query2) {
   }
 }
 
+// src/commands/cache.ts
+import { cacheSize, clearCache } from "@eip/core";
+async function cache(action) {
+  switch (action) {
+    case "size":
+      console.log("Cache Entries:", cacheSize());
+      break;
+    case "clear":
+      clearCache();
+      console.log("Cache cleared.");
+      break;
+    default:
+      console.log("Unknown action.");
+  }
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -275,5 +291,8 @@ program.command("impact").argument("<repo>").argument("<file>").action((repo, fi
 });
 program.command("search").argument("<repo>").argument("<query>").action((repo, query2) => {
   void search(repo, query2);
+});
+program.command("cache").argument("<action>").action((action) => {
+  void cache(action);
 });
 program.parse();

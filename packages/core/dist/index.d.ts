@@ -98,4 +98,11 @@ declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
 
 declare function buildKnowledge(repo: string): Promise<Result<ReturnType<typeof buildKnowledgeGraph>>>;
 
-export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents, searchRepository };
+declare function getCachedModel(key: string): RepositoryModel | null;
+declare function setCachedModel(key: string, model: RepositoryModel): void;
+declare function clearCache(): void;
+declare function cacheSize(): number;
+
+declare function createCacheKey(repo: string): string;
+
+export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, findComponent, findSymbol, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };

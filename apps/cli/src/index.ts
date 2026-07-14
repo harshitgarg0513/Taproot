@@ -10,6 +10,7 @@ import { model } from "./commands/model";
 import { knowledge } from "./commands/knowledge";
 import { impact } from "./commands/impact";
 import { search } from "./commands/search";
+import { cache } from "./commands/cache";
 
 const program = new Command();
 
@@ -79,6 +80,13 @@ program
   .argument("<query>")
   .action((repo: string, query: string) => {
     void search(repo, query);
+  });
+
+program
+  .command("cache")
+  .argument("<action>")
+  .action((action: string) => {
+    void cache(action);
   });
 
 program.parse();
