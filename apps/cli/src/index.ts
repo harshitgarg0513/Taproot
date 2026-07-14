@@ -6,6 +6,8 @@ import { components } from "./commands/components";
 import { graph } from "./commands/graph";
 import { inspect } from "./commands/inspect";
 import { query } from "./commands/query";
+import { model } from "./commands/model";
+import { knowledge } from "./commands/knowledge";
 
 const program = new Command();
 
@@ -47,6 +49,18 @@ program
   .argument("<value>")
   .action((repo: string, type: string, value: string) => {
     void query(repo, type, value);
+  });
+
+program
+  .command("model")
+  .argument("[path]", ".")
+  .action(model);
+
+program
+  .command("knowledge")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void knowledge(targetPath);
   });
 
 program.parse();

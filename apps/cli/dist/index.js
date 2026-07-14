@@ -98,21 +98,39 @@ async function inspect(path) {
 // src/commands/query.ts
 import { buildRepositoryModel, findComponent, findSymbol } from "@eip/core";
 async function query(repo, type, value) {
-  const model = await buildRepositoryModel(repo);
+  const model2 = await buildRepositoryModel(repo);
   switch (type) {
     case "component": {
-      const component = findComponent(model, value);
+      const component = findComponent(model2, value);
       console.log(component ?? `No component named "${value}" found.`);
       break;
     }
     case "symbol": {
-      const symbols = findSymbol(model, value);
+      const symbols = findSymbol(model2, value);
       console.log(symbols.length > 0 ? symbols : `No symbol named "${value}" found.`);
       break;
     }
     default:
       console.log("Unknown query.");
   }
+}
+
+// src/commands/model.ts
+import { buildRepositoryModel as buildRepositoryModel2 } from "@eip/core";
+async function model(path) {
+  const model2 = await buildRepositoryModel2(path);
+  console.log(JSON.stringify(model2, null, 2));
+}
+
+// src/commands/knowledge.ts
+import { buildKnowledge } from "@eip/core";
+async function knowledge(repo) {
+  const graph2 = await buildKnowledge(repo);
+  console.log();
+  console.log("Knowledge Graph");
+  console.log("----------------");
+  console.log("Nodes :", graph2.nodes.length);
+  console.log("Edges :", graph2.edges.length);
 }
 
 // src/index.ts
@@ -133,5 +151,9 @@ program.command("calls").argument("[path]", ".").action((targetPath) => {
 });
 program.command("query").argument("<repo>").argument("<type>").argument("<value>").action((repo, type, value) => {
   void query(repo, type, value);
+});
+program.command("model").argument("[path]", ".").action(model);
+program.command("knowledge").argument("[path]", ".").action((targetPath) => {
+  void knowledge(targetPath);
 });
 program.parse();

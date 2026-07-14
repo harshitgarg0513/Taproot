@@ -9,5 +9,6 @@ export async function buildRepositoryModel(repo: string): Promise<RepositoryMode
     components: analysis.components,
     symbols: analysis.symbols,
     relationships: analysis.relationships,
+    callGraph: analysis.callGraph,
   };
 }

@@ -1,11 +1,12 @@
-// src/model.ts
+// src/builder.ts
 import { analyzeRepository } from "@eip/analyzer";
 async function buildRepositoryModel(repo) {
   const analysis = await analyzeRepository(repo);
   return {
     components: analysis.components,
     symbols: analysis.symbols,
-    relationships: analysis.relationships
+    relationships: analysis.relationships,
+    callGraph: analysis.callGraph
   };
 }
 
@@ -44,7 +45,62 @@ function impactedFiles(model, file) {
   dfs(file);
   return [...visited];
 }
+
+// src/knowledge/graph.ts
+function buildKnowledgeGraph(model) {
+  const graph = {
+    nodes: [],
+    edges: []
+  };
+  for (const component of model.components) {
+    graph.nodes.push({
+      id: component.id,
+      type: "Component",
+      label: component.name
+    });
+  }
+  for (const symbol of model.symbols) {
+    graph.nodes.push({
+      id: symbol.id,
+      type: "Symbol",
+      label: symbol.name
+    });
+  }
+  for (const component of model.components) {
+    const related = model.symbols.filter((s) => s.file === component.file);
+    for (const symbol of related) {
+      graph.edges.push({
+        from: component.id,
+        to: symbol.id,
+        relation: "contains"
+      });
+    }
+  }
+  for (const edge of model.relationships) {
+    graph.edges.push({
+      from: edge.from,
+      to: edge.to,
+      relation: "imports"
+    });
+  }
+  for (const call of model.callGraph) {
+    graph.edges.push({
+      from: call.caller,
+      to: call.callee,
+      relation: "calls"
+    });
+  }
+  return graph;
+}
+
+// src/knowledge/builder.ts
+async function buildKnowledge(repo) {
+  const model = await buildRepositoryModel(repo);
+  return buildKnowledgeGraph(model);
+}
 export {
+  buildKnowledge,
+  buildKnowledgeGraph,
   buildRepositoryModel,
   dependenciesOf,
   dependentsOf,

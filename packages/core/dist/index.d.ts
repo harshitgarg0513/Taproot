@@ -18,6 +18,25 @@ interface RepositoryModel {
         to: string;
         type: string;
     }>;
+    callGraph: Array<{
+        caller: string;
+        callee: string;
+        file: string;
+    }>;
+}
+interface KnowledgeNode {
+    id: string;
+    type: "Component" | "File" | "Symbol";
+    label: string;
+}
+interface KnowledgeEdge {
+    from: string;
+    to: string;
+    relation: "contains" | "imports" | "calls";
+}
+interface KnowledgeGraph {
+    nodes: KnowledgeNode[];
+    edges: KnowledgeEdge[];
 }
 
 declare function buildRepositoryModel(repo: string): Promise<RepositoryModel>;
@@ -58,4 +77,8 @@ declare function dependentsOf(model: RepositoryModel, file: string): {
 
 declare function impactedFiles(model: RepositoryModel, file: string): string[];
 
-export { type RepositoryModel, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents };
+declare function buildKnowledge(repo: string): Promise<KnowledgeGraph>;
+
+declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
+
+export { type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents };
