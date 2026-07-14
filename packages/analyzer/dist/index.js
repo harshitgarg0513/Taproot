@@ -2,6 +2,30 @@
 import fg from "fast-glob";
 import { readFile } from "fs/promises";
 
+// src/graph.ts
+import path from "path";
+function buildDependencyGraph(analysis) {
+  const relationships = [];
+  const projectFiles = new Set(analysis.files.map((file) => path.normalize(file.path)));
+  for (const file of analysis.files) {
+    const imports = file.symbols.filter((symbol) => symbol.kind === "import");
+    for (const imp of imports) {
+      const match = imp.name.match(/from\s+['"](.+)['"]/);
+      if (!match) continue;
+      const specifier = match[1];
+      if (!specifier.startsWith(".")) continue;
+      const absolute = path.normalize(path.resolve(path.dirname(file.path), specifier + ".ts"));
+      if (!projectFiles.has(absolute)) continue;
+      relationships.push({
+        from: file.path,
+        to: absolute,
+        type: "IMPORTS"
+      });
+    }
+  }
+  return relationships;
+}
+
 // src/parser.ts
 import Parser from "tree-sitter";
 import TypeScript from "tree-sitter-typescript";
@@ -74,7 +98,8 @@ async function analyzeRepository(root) {
   });
   const analysis = {
     files: [],
-    symbols: []
+    symbols: [],
+    relationships: []
   };
   for (const file of files) {
     const source = await readFile(file, "utf8");
@@ -83,6 +108,7 @@ async function analyzeRepository(root) {
     analysis.files.push(parsed);
     analysis.symbols.push(...parsed.symbols);
   }
+  analysis.relationships = buildDependencyGraph(analysis);
   return analysis;
 }
 export {

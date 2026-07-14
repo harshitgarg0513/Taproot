@@ -3,14 +3,27 @@
 // src/index.ts
 import { Command } from "commander";
 
+// src/commands/graph.ts
+import { analyzeRepository } from "@eip/analyzer";
+async function graph(repo) {
+  const analysis = await analyzeRepository(repo);
+  console.log();
+  console.log("Dependency Graph");
+  console.log("-------------------------");
+  for (const edge of analysis.relationships) {
+    console.log(edge.from, " --> ", edge.to);
+  }
+  console.log();
+}
+
 // src/commands/inspect.ts
 import pc from "picocolors";
-import { analyzeRepository } from "@eip/analyzer";
+import { analyzeRepository as analyzeRepository2 } from "@eip/analyzer";
 import { observeRepository } from "@eip/observer";
 import { formatDuration } from "@eip/shared";
 async function inspect(path) {
   const snapshot = await observeRepository(path);
-  const analysis = await analyzeRepository(path);
+  const analysis = await analyzeRepository2(path);
   console.log();
   console.log(pc.cyan("Engineering Intelligence Platform"));
   console.log("--------------------------------------");
@@ -40,6 +53,7 @@ async function inspect(path) {
   console.log("Methods          :", methods);
   console.log("Imports          :", imports);
   console.log("Exports          :", exportsCount);
+  console.log("Relationships    :", analysis.relationships.length);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }
@@ -50,5 +64,8 @@ program.name("eip");
 program.version("0.0.1");
 program.command("inspect").argument("[path]", ".", "Repository Path").action((targetPath) => {
   void inspect(targetPath);
+});
+program.command("graph").argument("[path]", ".", "Repository").action((targetPath) => {
+  void graph(targetPath);
 });
 program.parse();

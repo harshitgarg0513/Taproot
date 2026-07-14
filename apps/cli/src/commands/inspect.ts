@@ -38,6 +38,7 @@ export async function inspect(path: string) {
   console.log("Methods          :", methods);
   console.log("Imports          :", imports);
   console.log("Exports          :", exportsCount);
+  console.log("Relationships    :", analysis.relationships.length);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }

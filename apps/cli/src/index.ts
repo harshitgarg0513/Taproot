@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { graph } from "./commands/graph";
 import { inspect } from "./commands/inspect";
 
 const program = new Command();
@@ -13,6 +14,13 @@ program
   .argument("[path]", ".", "Repository Path")
   .action((targetPath: string) => {
     void inspect(targetPath);
+  });
+
+program
+  .command("graph")
+  .argument("[path]", ".", "Repository")
+  .action((targetPath: string) => {
+    void graph(targetPath);
   });
 
 program.parse();

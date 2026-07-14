@@ -22,7 +22,14 @@ export interface ParsedFile {
   symbols: SymbolNode[];
 }
 
+export interface Relationship {
+  from: string;
+  to: string;
+  type: "IMPORTS";
+}
+
 export interface RepositoryAnalysis {
   files: ParsedFile[];
   symbols: SymbolNode[];
+  relationships: Relationship[];
 }
