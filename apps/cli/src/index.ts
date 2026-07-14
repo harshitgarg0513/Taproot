@@ -5,6 +5,7 @@ import { calls } from "./commands/calls";
 import { components } from "./commands/components";
 import { graph } from "./commands/graph";
 import { inspect } from "./commands/inspect";
+import { query } from "./commands/query";
 
 const program = new Command();
 
@@ -37,6 +38,15 @@ program
   .argument("[path]", ".")
   .action((targetPath: string) => {
     void calls(targetPath);
+  });
+
+program
+  .command("query")
+  .argument("<repo>")
+  .argument("<type>")
+  .argument("<value>")
+  .action((repo: string, type: string, value: string) => {
+    void query(repo, type, value);
   });
 
 program.parse();

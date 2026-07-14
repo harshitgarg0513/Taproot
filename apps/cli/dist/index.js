@@ -95,6 +95,26 @@ async function inspect(path) {
   console.log();
 }
 
+// src/commands/query.ts
+import { buildRepositoryModel, findComponent, findSymbol } from "@eip/core";
+async function query(repo, type, value) {
+  const model = await buildRepositoryModel(repo);
+  switch (type) {
+    case "component": {
+      const component = findComponent(model, value);
+      console.log(component ?? `No component named "${value}" found.`);
+      break;
+    }
+    case "symbol": {
+      const symbols = findSymbol(model, value);
+      console.log(symbols.length > 0 ? symbols : `No symbol named "${value}" found.`);
+      break;
+    }
+    default:
+      console.log("Unknown query.");
+  }
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -110,5 +130,8 @@ program.command("components").argument("[path]", ".").action((targetPath) => {
 });
 program.command("calls").argument("[path]", ".").action((targetPath) => {
   void calls(targetPath);
+});
+program.command("query").argument("<repo>").argument("<type>").argument("<value>").action((repo, type, value) => {
+  void query(repo, type, value);
 });
 program.parse();

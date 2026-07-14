@@ -48,6 +48,9 @@ importers:
       '@eip/analyzer':
         specifier: workspace:*
         version: link:../../packages/analyzer
+      '@eip/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@eip/observer':
         specifier: workspace:*
         version: link:../../packages/observer
@@ -75,6 +78,12 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/core:
+    dependencies:
+      '@eip/analyzer':
+        specifier: workspace:*
+        version: link:../analyzer
 
   packages/observer:
     dependencies:
