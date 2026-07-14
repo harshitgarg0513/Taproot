@@ -1,4 +1,5 @@
 import { RepositoryModel } from "../types.js";
+import { Result, ok } from "@eip/shared";
 
 export interface ImpactResult {
   changedFile: string;
@@ -7,7 +8,7 @@ export interface ImpactResult {
   impactedSymbols: string[];
 }
 
-export function analyzeImpact(model: RepositoryModel, changedFile: string): ImpactResult {
+export function analyzeImpact(model: RepositoryModel, changedFile: string): Result<ImpactResult> {
   const impactedFiles = new Set<string>();
   const impactedComponents = new Set<string>();
   const impactedSymbols = new Set<string>();
@@ -38,10 +39,10 @@ export function analyzeImpact(model: RepositoryModel, changedFile: string): Impa
     }
   }
 
-  return {
+  return ok({
     changedFile,
     impactedFiles: [...impactedFiles],
     impactedComponents: [...impactedComponents],
     impactedSymbols: [...impactedSymbols],
-  };
+  });
 }

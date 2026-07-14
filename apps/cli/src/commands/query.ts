@@ -1,7 +1,14 @@
 import { buildRepositoryModel, findComponent, findSymbol } from "@eip/core";
 
 export async function query(repo: string, type: string, value: string) {
-  const model = await buildRepositoryModel(repo);
+  const modelResult = await buildRepositoryModel(repo);
+
+  if (!modelResult.success) {
+    console.error(modelResult.error.message);
+    process.exit(1);
+  }
+
+  const model = modelResult.data;
 
   switch (type) {
     case "component": {

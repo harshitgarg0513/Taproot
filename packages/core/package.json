@@ -8,6 +8,7 @@
     "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
-    "@eip/analyzer": "workspace:*"
+    "@eip/analyzer": "workspace:*",
+    "@eip/shared": "workspace:*"
   }
 }

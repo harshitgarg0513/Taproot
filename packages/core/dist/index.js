@@ -1,13 +1,18 @@
 // src/builder.ts
 import { analyzeRepository } from "@eip/analyzer";
+import { err, ok } from "@eip/shared";
 async function buildRepositoryModel(repo) {
-  const analysis = await analyzeRepository(repo);
-  return {
+  const analysisResult = await analyzeRepository(repo);
+  if (!analysisResult.success) {
+    return err(analysisResult.error);
+  }
+  const analysis = analysisResult.data;
+  return ok({
     components: analysis.components,
     symbols: analysis.symbols,
     relationships: analysis.relationships,
     callGraph: analysis.callGraph
-  };
+  });
 }
 
 // src/query/component.ts
@@ -47,6 +52,7 @@ function impactedFiles(model, file) {
 }
 
 // src/query/impactAnalyzer.ts
+import { ok as ok2 } from "@eip/shared";
 function analyzeImpact(model, changedFile) {
   const impactedFiles2 = /* @__PURE__ */ new Set();
   const impactedComponents = /* @__PURE__ */ new Set();
@@ -71,15 +77,16 @@ function analyzeImpact(model, changedFile) {
       impactedComponents.add(component.name);
     }
   }
-  return {
+  return ok2({
     changedFile,
     impactedFiles: [...impactedFiles2],
     impactedComponents: [...impactedComponents],
     impactedSymbols: [...impactedSymbols]
-  };
+  });
 }
 
 // src/query/search.ts
+import { ok as ok3 } from "@eip/shared";
 function searchRepository(model, query) {
   const q = query.toLowerCase();
   const components = model.components.filter(
@@ -94,11 +101,11 @@ function searchRepository(model, query) {
       ...symbols.map((symbol) => symbol.file)
     ])
   ];
-  return {
+  return ok3({
     components,
     symbols,
     files
-  };
+  });
 }
 
 // src/knowledge/graph.ts
@@ -149,9 +156,13 @@ function buildKnowledgeGraph(model) {
 }
 
 // src/knowledge/builder.ts
+import { err as err2, ok as ok4 } from "@eip/shared";
 async function buildKnowledge(repo) {
-  const model = await buildRepositoryModel(repo);
-  return buildKnowledgeGraph(model);
+  const modelResult = await buildRepositoryModel(repo);
+  if (!modelResult.success) {
+    return err2(modelResult.error);
+  }
+  return ok4(buildKnowledgeGraph(modelResult.data));
 }
 export {
   analyzeImpact,

@@ -66,6 +66,9 @@ importers:
 
   packages/analyzer:
     dependencies:
+      '@eip/shared':
+        specifier: workspace:*
+        version: link:../shared
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -84,9 +87,15 @@ importers:
       '@eip/analyzer':
         specifier: workspace:*
         version: link:../analyzer
+      '@eip/shared':
+        specifier: workspace:*
+        version: link:../shared
 
   packages/observer:
     dependencies:
+      '@eip/shared':
+        specifier: workspace:*
+        version: link:../shared
       fs-extra:
         specifier: ^11.3.2
         version: 11.3.6

@@ -81,12 +81,16 @@ async function detectProject(root, extensions) {
 }
 
 // src/observer.ts
+import { RepositoryNotFoundError, err, ok } from "@eip/shared";
 async function observeRepository(root) {
   const start = performance.now();
+  if (!await fs3.pathExists(root)) {
+    return err(new RepositoryNotFoundError(root));
+  }
   const scan = await scanRepository(root);
   const detection = await detectProject(root, scan.extensions);
   const end = performance.now();
-  return {
+  return ok({
     name: path3.basename(root),
     rootPath: root,
     totalFiles: scan.files,
@@ -97,7 +101,7 @@ async function observeRepository(root) {
     hasGit: await fs3.pathExists(path3.join(root, ".git")),
     scannedAt: /* @__PURE__ */ new Date(),
     scanDurationMs: Math.round(end - start)
-  };
+  });
 }
 export {
   observeRepository

@@ -1,3 +1,5 @@
+import { Result } from '@eip/shared';
+
 interface RepositoryModel {
     components: Array<{
         id: string;
@@ -39,7 +41,7 @@ interface KnowledgeGraph {
     edges: KnowledgeEdge[];
 }
 
-declare function buildRepositoryModel(repo: string): Promise<RepositoryModel>;
+declare function buildRepositoryModel(repo: string): Promise<Result<RepositoryModel>>;
 
 declare function findComponent(model: RepositoryModel, name: string): {
     id: string;
@@ -83,17 +85,17 @@ interface ImpactResult {
     impactedComponents: string[];
     impactedSymbols: string[];
 }
-declare function analyzeImpact(model: RepositoryModel, changedFile: string): ImpactResult;
+declare function analyzeImpact(model: RepositoryModel, changedFile: string): Result<ImpactResult>;
 
 interface SearchResult {
     components: RepositoryModel["components"];
     symbols: RepositoryModel["symbols"];
     files: string[];
 }
-declare function searchRepository(model: RepositoryModel, query: string): SearchResult;
-
-declare function buildKnowledge(repo: string): Promise<KnowledgeGraph>;
+declare function searchRepository(model: RepositoryModel, query: string): Result<SearchResult>;
 
 declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
+
+declare function buildKnowledge(repo: string): Promise<Result<ReturnType<typeof buildKnowledgeGraph>>>;
 
 export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents, searchRepository };

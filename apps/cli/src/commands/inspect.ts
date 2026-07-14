@@ -4,8 +4,22 @@ import { observeRepository } from "@eip/observer";
 import { formatDuration } from "@eip/shared";
 
 export async function inspect(path: string) {
-  const snapshot = await observeRepository(path);
-  const analysis = await analyzeRepository(path);
+  const snapshotResult = await observeRepository(path);
+
+  if (!snapshotResult.success) {
+    console.error(snapshotResult.error.message);
+    process.exit(1);
+  }
+
+  const analysisResult = await analyzeRepository(path);
+
+  if (!analysisResult.success) {
+    console.error(analysisResult.error.message);
+    process.exit(1);
+  }
+
+  const snapshot = snapshotResult.data;
+  const analysis = analysisResult.data;
 
   console.log();
   console.log(pc.cyan("Engineering Intelligence Platform"));

@@ -169,36 +169,41 @@ function buildCallGraph(tree, file) {
 }
 
 // src/analyzer.ts
+import { err, ok } from "@eip/shared";
 async function analyzeRepository(root) {
-  const files = await fg(["**/*.ts"], {
-    cwd: root,
-    absolute: true,
-    ignore: ["**/node_modules/**", "**/dist/**"]
-  });
-  const analysis = {
-    files: [],
-    symbols: [],
-    relationships: [],
-    components: [],
-    callGraph: []
-  };
-  for (const file of files) {
-    const source = await readFile(file, "utf8");
-    const tree = parse(source);
-    const parsed = buildSymbolTable(tree, file);
-    analysis.files.push(parsed);
-    analysis.symbols.push(...parsed.symbols);
-    analysis.callGraph.push(...buildCallGraph(tree, file));
+  try {
+    const files = await fg(["**/*.ts"], {
+      cwd: root,
+      absolute: true,
+      ignore: ["**/node_modules/**", "**/dist/**"]
+    });
+    const analysis = {
+      files: [],
+      symbols: [],
+      relationships: [],
+      components: [],
+      callGraph: []
+    };
+    for (const file of files) {
+      const source = await readFile(file, "utf8");
+      const tree = parse(source);
+      const parsed = buildSymbolTable(tree, file);
+      analysis.files.push(parsed);
+      analysis.symbols.push(...parsed.symbols);
+      analysis.callGraph.push(...buildCallGraph(tree, file));
+    }
+    analysis.relationships = buildDependencyGraph(analysis);
+    const program = createProgram(files);
+    const decoratorComponents = [];
+    for (const source of program.getSourceFiles()) {
+      if (!source.fileName.startsWith(root)) continue;
+      decoratorComponents.push(...extractDecoratorComponents(source));
+    }
+    analysis.components = decoratorComponents;
+    return ok(analysis);
+  } catch (error) {
+    return err(error instanceof Error ? error : new Error("Failed to analyze repository"));
   }
-  analysis.relationships = buildDependencyGraph(analysis);
-  const program = createProgram(files);
-  const decoratorComponents = [];
-  for (const source of program.getSourceFiles()) {
-    if (!source.fileName.startsWith(root)) continue;
-    decoratorComponents.push(...extractDecoratorComponents(source));
-  }
-  analysis.components = decoratorComponents;
-  return analysis;
 }
 export {
   analyzeRepository

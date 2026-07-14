@@ -1,3 +1,5 @@
+import { Result } from '@eip/shared';
+
 type SymbolKind = "class" | "function" | "method" | "interface" | "type" | "enum" | "variable" | "import" | "export";
 interface SymbolNode {
     id: string;
@@ -36,6 +38,6 @@ interface RepositoryAnalysis {
     callGraph: CallRelationship[];
 }
 
-declare function analyzeRepository(root: string): Promise<RepositoryAnalysis>;
+declare function analyzeRepository(root: string): Promise<Result<RepositoryAnalysis>>;
 
 export { type CallRelationship, type Component, type ComponentType, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

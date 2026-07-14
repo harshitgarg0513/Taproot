@@ -1,7 +1,14 @@
 import { analyzeRepository } from "@eip/analyzer";
 
 export async function graph(repo: string) {
-  const analysis = await analyzeRepository(repo);
+  const analysisResult = await analyzeRepository(repo);
+
+  if (!analysisResult.success) {
+    console.error(analysisResult.error.message);
+    process.exit(1);
+  }
+
+  const analysis = analysisResult.data;
 
   console.log();
   console.log("Dependency Graph");

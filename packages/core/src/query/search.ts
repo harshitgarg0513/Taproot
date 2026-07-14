@@ -1,4 +1,5 @@
 import { RepositoryModel } from "../types.js";
+import { Result, ok } from "@eip/shared";
 
 export interface SearchResult {
   components: RepositoryModel["components"];
@@ -6,7 +7,7 @@ export interface SearchResult {
   files: string[];
 }
 
-export function searchRepository(model: RepositoryModel, query: string): SearchResult {
+export function searchRepository(model: RepositoryModel, query: string): Result<SearchResult> {
   const q = query.toLowerCase();
 
   const components = model.components.filter((component) =>
@@ -24,9 +25,9 @@ export function searchRepository(model: RepositoryModel, query: string): SearchR
     ]),
   ];
 
-  return {
+  return ok({
     components,
     symbols,
     files,
-  };
+  });
 }

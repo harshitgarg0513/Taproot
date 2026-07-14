@@ -1,3 +1,5 @@
+import { Result } from '@eip/shared';
+
 interface RepositorySnapshot {
     name: string;
     rootPath: string;
@@ -16,6 +18,6 @@ interface ScanResult {
     extensions: Set<string>;
 }
 
-declare function observeRepository(root: string): Promise<RepositorySnapshot>;
+declare function observeRepository(root: string): Promise<Result<RepositorySnapshot>>;
 
 export { type RepositorySnapshot, type ScanResult, observeRepository };
