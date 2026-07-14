@@ -5,17 +5,10 @@ import path3 from "path";
 // src/scanner.ts
 import fs from "fs-extra";
 import path from "path";
-var IGNORE = /* @__PURE__ */ new Set([
-  "node_modules",
-  ".git",
-  ".turbo",
-  "dist",
-  "build",
-  ".next",
-  ".idea",
-  ".vscode"
-]);
+import { loadConfig } from "@eip/config";
 async function scanRepository(root) {
+  const config = await loadConfig(root);
+  const IGNORE = new Set(config.ignore);
   const result = {
     files: 0,
     directories: 0,

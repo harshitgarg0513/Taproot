@@ -11,6 +11,8 @@ import { knowledge } from "./commands/knowledge";
 import { impact } from "./commands/impact";
 import { search } from "./commands/search";
 import { cache } from "./commands/cache";
+import { benchmark } from "./commands/benchmark";
+import { config as configCommand } from "./commands/config";
 
 const program = new Command();
 
@@ -87,6 +89,20 @@ program
   .argument("<action>")
   .action((action: string) => {
     void cache(action);
+  });
+
+program
+  .command("benchmark")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void benchmark(targetPath);
+  });
+
+program
+  .command("config")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void configCommand(targetPath);
   });
 
 program.parse();

@@ -1,13 +1,13 @@
 import { buildRepositoryModel } from "../builder.js";
-import { buildKnowledgeGraph } from "./graph.js";
 import { Result, err, ok } from "@eip/shared";
+import type { KnowledgeGraph } from "../types.js";
 
-export async function buildKnowledge(repo: string): Promise<Result<ReturnType<typeof buildKnowledgeGraph>>> {
+export async function buildKnowledge(repo: string): Promise<Result<KnowledgeGraph>> {
   const modelResult = await buildRepositoryModel(repo);
 
   if (!modelResult.success) {
     return err(modelResult.error);
   }
 
-  return ok(buildKnowledgeGraph(modelResult.data));
+  return ok(modelResult.data.knowledgeGraph);
 }

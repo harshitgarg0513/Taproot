@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@eip/analyzer": "workspace:*",
+    "@eip/config": "workspace:*",
+    "@eip/observer": "workspace:*",
     "@eip/shared": "workspace:*"
   }
 }

@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 import { buildDependencyGraph } from "./graph/dependencyGraph.js";
 import { parse } from "./parser/parser.js";
-import { buildSymbolTable } from "./parser/symbolWalker.js";
+import { buildMasterWalker } from "./parser/masterWalker.js";
 import { createProgram } from "./tsCompiler.js";
 import { extractDecoratorComponents } from "./component/decoratorExtractor.js";
 import { buildCallGraph } from "./graph/callGraph.js";
@@ -29,7 +29,7 @@ export async function analyzeRepository(root: string): Promise<Result<Repository
     for (const file of files) {
       const source = await readFile(file, "utf8");
       const tree = parse(source);
-      const parsed = buildSymbolTable(tree, file);
+      const parsed = buildMasterWalker(tree, file);
 
       analysis.files.push(parsed);
       analysis.symbols.push(...parsed.symbols);

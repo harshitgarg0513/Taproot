@@ -1,6 +1,36 @@
+import { EipConfig } from '@eip/config';
 import { Result } from '@eip/shared';
 
+declare class Timer {
+    private readonly start;
+    end(): number;
+}
+
+interface BuildMetrics {
+    observerMs: number;
+    analyzerMs: number;
+    graphMs: number;
+    totalMs: number;
+}
+
 interface RepositoryModel {
+    config: EipConfig;
+    metrics: BuildMetrics;
+    knowledgeGraph: KnowledgeGraph;
+    componentIndex: Map<string, {
+        id: string;
+        name: string;
+        type: string;
+        file: string;
+        line: number;
+    }>;
+    symbolIndex: Map<string, {
+        id: string;
+        name: string;
+        kind: string;
+        file: string;
+        line: number;
+    }>;
     components: Array<{
         id: string;
         name: string;
@@ -94,9 +124,9 @@ interface SearchResult {
 }
 declare function searchRepository(model: RepositoryModel, query: string): Result<SearchResult>;
 
-declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
+declare function buildKnowledge(repo: string): Promise<Result<KnowledgeGraph>>;
 
-declare function buildKnowledge(repo: string): Promise<Result<ReturnType<typeof buildKnowledgeGraph>>>;
+declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
 
 declare function getCachedModel(key: string): RepositoryModel | null;
 declare function setCachedModel(key: string, model: RepositoryModel): void;
@@ -105,4 +135,4 @@ declare function cacheSize(): number;
 
 declare function createCacheKey(repo: string): string;
 
-export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, findComponent, findSymbol, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };
+export { type BuildMetrics, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, Timer, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, findComponent, findSymbol, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };

@@ -6,7 +6,9 @@ import { readFile } from "fs/promises";
 import path from "path";
 function buildDependencyGraph(analysis) {
   const relationships = [];
-  const projectFiles = new Set(analysis.files.map((file) => path.normalize(file.path)));
+  const projectFiles = new Set(
+    analysis.files.map((file) => path.normalize(path.resolve(file.path)))
+  );
   for (const file of analysis.files) {
     const imports = file.symbols.filter((symbol) => symbol.kind === "import");
     for (const imp of imports) {
@@ -35,7 +37,7 @@ function parse(code) {
   return parser.parse(code);
 }
 
-// src/parser/symbolWalker.ts
+// src/parser/masterWalker.ts
 function add(output, kind, name, file, line) {
   output.symbols.push({
     id: `${file}:${line}:${kind}:${name}`,
@@ -45,7 +47,7 @@ function add(output, kind, name, file, line) {
     line
   });
 }
-function buildSymbolTable(tree, file) {
+function buildMasterWalker(tree, file) {
   const parsed = {
     path: file,
     symbols: []
@@ -80,6 +82,13 @@ function buildSymbolTable(tree, file) {
       case "export_statement":
         add(parsed, "export", node.text, file, node.startPosition.row + 1);
         break;
+      case "call_expression": {
+        const fn = node.childForFieldName("function");
+        if (fn) {
+          add(parsed, "function", fn.text, file, node.startPosition.row + 1);
+        }
+        break;
+      }
     }
     for (const child of node.children) {
       visit(child);
@@ -187,7 +196,7 @@ async function analyzeRepository(root) {
     for (const file of files) {
       const source = await readFile(file, "utf8");
       const tree = parse(source);
-      const parsed = buildSymbolTable(tree, file);
+      const parsed = buildMasterWalker(tree, file);
       analysis.files.push(parsed);
       analysis.symbols.push(...parsed.symbols);
       analysis.callGraph.push(...buildCallGraph(tree, file));

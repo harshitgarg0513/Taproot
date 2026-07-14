@@ -1,19 +1,11 @@
 import fs from "fs-extra";
 import path from "path";
+import { loadConfig } from "@eip/config";
 import { ScanResult } from "./types.js";
 
-const IGNORE = new Set([
-  "node_modules",
-  ".git",
-  ".turbo",
-  "dist",
-  "build",
-  ".next",
-  ".idea",
-  ".vscode",
-]);
-
 export async function scanRepository(root: string): Promise<ScanResult> {
+  const config = await loadConfig(root);
+  const IGNORE = new Set(config.ignore);
   const result: ScanResult = {
     files: 0,
     directories: 0,

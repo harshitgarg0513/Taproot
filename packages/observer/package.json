@@ -8,6 +8,7 @@
     "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
+    "@eip/config": "workspace:*",
     "@eip/shared": "workspace:*",
     "fs-extra": "^11.3.2"
   }

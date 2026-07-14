@@ -1,0 +1,17 @@
+{
+  "ignore": [
+    "coverage",
+    "node_modules",
+    "dist"
+  ],
+  "languages": [
+    "typescript"
+  ],
+  "cache": true,
+  "cacheTTL": 300,
+  "followSymlinks": false,
+  "output": {
+    "colors": true,
+    "format": "table"
+  }
+}

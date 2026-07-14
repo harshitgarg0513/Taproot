@@ -263,6 +263,34 @@ async function cache(action) {
   }
 }
 
+// src/commands/benchmark.ts
+import { buildRepositoryModel as buildRepositoryModel5 } from "@eip/core";
+async function benchmark(repo) {
+  const start = performance.now();
+  const result = await buildRepositoryModel5(repo);
+  const total = performance.now() - start;
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const m = result.data.metrics;
+  console.log();
+  console.log("Benchmark");
+  console.log("----------------");
+  console.log();
+  console.log("Observer :", m.observerMs.toFixed(2), "ms");
+  console.log("Analyzer :", m.analyzerMs.toFixed(2), "ms");
+  console.log("Graph :", m.graphMs.toFixed(2), "ms");
+  console.log("Total :", total.toFixed(2), "ms");
+}
+
+// src/commands/config.ts
+import { loadConfig } from "@eip/config";
+async function config(repo) {
+  const cfg = await loadConfig(repo);
+  console.log(JSON.stringify(cfg, null, 2));
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -294,5 +322,11 @@ program.command("search").argument("<repo>").argument("<query>").action((repo, q
 });
 program.command("cache").argument("<action>").action((action) => {
   void cache(action);
+});
+program.command("benchmark").argument("[path]", ".").action((targetPath) => {
+  void benchmark(targetPath);
+});
+program.command("config").argument("[path]", ".").action((targetPath) => {
+  void config(targetPath);
 });
 program.parse();
