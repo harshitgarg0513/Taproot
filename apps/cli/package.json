@@ -1,0 +1,16 @@
+{
+  "name": "cli",
+  "version": "0.0.1",
+  "private": true,
+  "bin": {
+    "eip": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsup src/index.ts --format cjs --out-dir dist --watch",
+    "build": "tsup src/index.ts --format cjs --out-dir dist",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@eip/observer": "workspace:*"
+  }
+}

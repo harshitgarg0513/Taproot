@@ -1,0 +1,20 @@
+{
+  "name": "sclare",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "pnpm -r build"
+  },
+  "dependencies": {
+    "chalk": "^5.0.1",
+    "commander": "^12.1.0",
+    "fast-glob": "^3.0.0",
+    "fs-extra": "^11.0.1",
+    "picocolors": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  }
+}
