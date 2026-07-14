@@ -164,6 +164,34 @@ async function impact(repo, file) {
   }
 }
 
+// src/commands/search.ts
+import { buildRepositoryModel as buildRepositoryModel4, searchRepository } from "@eip/core";
+async function search(repo, query2) {
+  const model2 = await buildRepositoryModel4(repo);
+  const result = searchRepository(model2, query2);
+  console.log();
+  console.log("Search");
+  console.log("----------------");
+  console.log();
+  console.log("Components");
+  console.log();
+  for (const component of result.components) {
+    console.log(component.type.padEnd(15), component.name);
+  }
+  console.log();
+  console.log("Symbols");
+  console.log();
+  for (const symbol of result.symbols) {
+    console.log(symbol.kind.padEnd(15), symbol.name);
+  }
+  console.log();
+  console.log("Files");
+  console.log();
+  for (const file of result.files) {
+    console.log(file);
+  }
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -189,5 +217,8 @@ program.command("knowledge").argument("[path]", ".").action((targetPath) => {
 });
 program.command("impact").argument("<repo>").argument("<file>").action((repo, file) => {
   void impact(repo, file);
+});
+program.command("search").argument("<repo>").argument("<query>").action((repo, query2) => {
+  void search(repo, query2);
 });
 program.parse();

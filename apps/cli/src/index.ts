@@ -9,6 +9,7 @@ import { query } from "./commands/query";
 import { model } from "./commands/model";
 import { knowledge } from "./commands/knowledge";
 import { impact } from "./commands/impact";
+import { search } from "./commands/search";
 
 const program = new Command();
 
@@ -70,6 +71,14 @@ program
   .argument("<file>")
   .action((repo: string, file: string) => {
     void impact(repo, file);
+  });
+
+program
+  .command("search")
+  .argument("<repo>")
+  .argument("<query>")
+  .action((repo: string, query: string) => {
+    void search(repo, query);
   });
 
 program.parse();

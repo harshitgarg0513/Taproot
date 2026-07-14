@@ -85,8 +85,15 @@ interface ImpactResult {
 }
 declare function analyzeImpact(model: RepositoryModel, changedFile: string): ImpactResult;
 
+interface SearchResult {
+    components: RepositoryModel["components"];
+    symbols: RepositoryModel["symbols"];
+    files: string[];
+}
+declare function searchRepository(model: RepositoryModel, query: string): SearchResult;
+
 declare function buildKnowledge(repo: string): Promise<KnowledgeGraph>;
 
 declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
 
-export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents };
+export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents, searchRepository };

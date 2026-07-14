@@ -79,6 +79,28 @@ function analyzeImpact(model, changedFile) {
   };
 }
 
+// src/query/search.ts
+function searchRepository(model, query) {
+  const q = query.toLowerCase();
+  const components = model.components.filter(
+    (component) => component.name.toLowerCase().includes(q)
+  );
+  const symbols = model.symbols.filter(
+    (symbol) => symbol.name.toLowerCase().includes(q)
+  );
+  const files = [
+    .../* @__PURE__ */ new Set([
+      ...components.map((component) => component.file),
+      ...symbols.map((symbol) => symbol.file)
+    ])
+  ];
+  return {
+    components,
+    symbols,
+    files
+  };
+}
+
 // src/knowledge/graph.ts
 function buildKnowledgeGraph(model) {
   const graph = {
@@ -141,5 +163,6 @@ export {
   findComponent,
   findSymbol,
   impactedFiles,
-  listComponents
+  listComponents,
+  searchRepository
 };
