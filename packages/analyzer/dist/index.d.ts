@@ -15,12 +15,21 @@ interface Relationship {
     to: string;
     type: "IMPORTS";
 }
+type ComponentType = "Controller" | "Service" | "Module" | "Repository" | "Entity" | "Unknown";
+interface Component {
+    id: string;
+    name: string;
+    type: ComponentType;
+    file: string;
+    line: number;
+}
 interface RepositoryAnalysis {
     files: ParsedFile[];
     symbols: SymbolNode[];
     relationships: Relationship[];
+    components: Component[];
 }
 
 declare function analyzeRepository(root: string): Promise<RepositoryAnalysis>;
 
-export { type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };
+export { type Component, type ComponentType, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

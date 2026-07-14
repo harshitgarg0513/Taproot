@@ -39,6 +39,19 @@ export async function inspect(path: string) {
   console.log("Imports          :", imports);
   console.log("Exports          :", exportsCount);
   console.log("Relationships    :", analysis.relationships.length);
+
+  const controllerCount = analysis.components.filter((component) => component.type === "Controller").length;
+  const serviceCount = analysis.components.filter((component) => component.type === "Service").length;
+  const moduleCount = analysis.components.filter((component) => component.type === "Module").length;
+  const repositoryCount = analysis.components.filter((component) => component.type === "Repository").length;
+  const entityCount = analysis.components.filter((component) => component.type === "Entity").length;
+
+  console.log("Components       :", analysis.components.length);
+  console.log("Controllers      :", controllerCount);
+  console.log("Services         :", serviceCount);
+  console.log("Modules          :", moduleCount);
+  console.log("Repositories     :", repositoryCount);
+  console.log("Entities         :", entityCount);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }

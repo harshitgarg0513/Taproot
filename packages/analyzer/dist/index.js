@@ -2,6 +2,30 @@
 import fg from "fast-glob";
 import { readFile } from "fs/promises";
 
+// src/component.ts
+function extractComponents(analysis) {
+  const components = [];
+  for (const file of analysis.files) {
+    for (const symbol of file.symbols) {
+      if (symbol.kind !== "class") continue;
+      let type = "Unknown";
+      if (symbol.name.endsWith("Controller")) type = "Controller";
+      else if (symbol.name.endsWith("Service")) type = "Service";
+      else if (symbol.name.endsWith("Module")) type = "Module";
+      else if (symbol.name.endsWith("Repository")) type = "Repository";
+      else if (symbol.name.endsWith("Entity")) type = "Entity";
+      components.push({
+        id: symbol.id,
+        name: symbol.name,
+        type,
+        file: symbol.file,
+        line: symbol.line
+      });
+    }
+  }
+  return components;
+}
+
 // src/graph.ts
 import path from "path";
 function buildDependencyGraph(analysis) {
@@ -99,7 +123,8 @@ async function analyzeRepository(root) {
   const analysis = {
     files: [],
     symbols: [],
-    relationships: []
+    relationships: [],
+    components: []
   };
   for (const file of files) {
     const source = await readFile(file, "utf8");
@@ -109,6 +134,7 @@ async function analyzeRepository(root) {
     analysis.symbols.push(...parsed.symbols);
   }
   analysis.relationships = buildDependencyGraph(analysis);
+  analysis.components = extractComponents(analysis);
   return analysis;
 }
 export {

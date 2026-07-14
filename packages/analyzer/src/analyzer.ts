@@ -1,6 +1,7 @@
 import fg from "fast-glob";
 import { readFile } from "node:fs/promises";
 
+import { extractComponents } from "./component.js";
 import { buildDependencyGraph } from "./graph.js";
 import { parse } from "./parser.js";
 import { buildSymbolTable } from "./symbolWalker.js";
@@ -17,6 +18,7 @@ export async function analyzeRepository(root: string): Promise<RepositoryAnalysi
     files: [],
     symbols: [],
     relationships: [],
+    components: [],
   };
 
   for (const file of files) {
@@ -29,6 +31,7 @@ export async function analyzeRepository(root: string): Promise<RepositoryAnalysi
   }
 
   analysis.relationships = buildDependencyGraph(analysis);
+  analysis.components = extractComponents(analysis);
 
   return analysis;
 }

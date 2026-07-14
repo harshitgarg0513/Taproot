@@ -3,10 +3,23 @@
 // src/index.ts
 import { Command } from "commander";
 
-// src/commands/graph.ts
+// src/commands/components.ts
 import { analyzeRepository } from "@eip/analyzer";
-async function graph(repo) {
+async function components(repo) {
   const analysis = await analyzeRepository(repo);
+  console.log();
+  console.log("Components");
+  console.log("-------------------------");
+  for (const component of analysis.components) {
+    console.log(`[${component.type}]`, component.name);
+  }
+  console.log();
+}
+
+// src/commands/graph.ts
+import { analyzeRepository as analyzeRepository2 } from "@eip/analyzer";
+async function graph(repo) {
+  const analysis = await analyzeRepository2(repo);
   console.log();
   console.log("Dependency Graph");
   console.log("-------------------------");
@@ -18,12 +31,12 @@ async function graph(repo) {
 
 // src/commands/inspect.ts
 import pc from "picocolors";
-import { analyzeRepository as analyzeRepository2 } from "@eip/analyzer";
+import { analyzeRepository as analyzeRepository3 } from "@eip/analyzer";
 import { observeRepository } from "@eip/observer";
 import { formatDuration } from "@eip/shared";
 async function inspect(path) {
   const snapshot = await observeRepository(path);
-  const analysis = await analyzeRepository2(path);
+  const analysis = await analyzeRepository3(path);
   console.log();
   console.log(pc.cyan("Engineering Intelligence Platform"));
   console.log("--------------------------------------");
@@ -54,6 +67,17 @@ async function inspect(path) {
   console.log("Imports          :", imports);
   console.log("Exports          :", exportsCount);
   console.log("Relationships    :", analysis.relationships.length);
+  const controllerCount = analysis.components.filter((component) => component.type === "Controller").length;
+  const serviceCount = analysis.components.filter((component) => component.type === "Service").length;
+  const moduleCount = analysis.components.filter((component) => component.type === "Module").length;
+  const repositoryCount = analysis.components.filter((component) => component.type === "Repository").length;
+  const entityCount = analysis.components.filter((component) => component.type === "Entity").length;
+  console.log("Components       :", analysis.components.length);
+  console.log("Controllers      :", controllerCount);
+  console.log("Services         :", serviceCount);
+  console.log("Modules          :", moduleCount);
+  console.log("Repositories     :", repositoryCount);
+  console.log("Entities         :", entityCount);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }
@@ -67,5 +91,8 @@ program.command("inspect").argument("[path]", ".", "Repository Path").action((ta
 });
 program.command("graph").argument("[path]", ".", "Repository").action((targetPath) => {
   void graph(targetPath);
+});
+program.command("components").argument("[path]", ".").action((targetPath) => {
+  void components(targetPath);
 });
 program.parse();

@@ -28,8 +28,25 @@ export interface Relationship {
   type: "IMPORTS";
 }
 
+export type ComponentType =
+  | "Controller"
+  | "Service"
+  | "Module"
+  | "Repository"
+  | "Entity"
+  | "Unknown";
+
+export interface Component {
+  id: string;
+  name: string;
+  type: ComponentType;
+  file: string;
+  line: number;
+}
+
 export interface RepositoryAnalysis {
   files: ParsedFile[];
   symbols: SymbolNode[];
   relationships: Relationship[];
+  components: Component[];
 }
