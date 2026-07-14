@@ -1,3 +1,7 @@
 export * from "./explain.js";
 export * from "./formatter.js";
 export * from "./summary.js";
+export * from "./dependencyReasoner.js";
+export * from "./responsibility.js";
+export * from "./explainBuilder.js";
+export * from "./formatterV2.js";

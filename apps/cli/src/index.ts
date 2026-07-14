@@ -15,7 +15,7 @@ import { benchmark } from "./commands/benchmark";
 import { classify } from "./commands/classify";
 import { config as configCommand } from "./commands/config.js";
 import { entities } from "./commands/entities";
-import { explain } from "./commands/explain.js";
+import { explainCommand } from "./commands/explain.js";
 
 const program = new Command();
 
@@ -124,7 +124,7 @@ program
   .argument("<repo>")
   .argument("<component>")
   .action((repo: string, component: string) => {
-    void explain(repo, component);
+    void explainCommand(repo, component);
   });
 
 program.parse();

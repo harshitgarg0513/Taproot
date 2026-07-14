@@ -2,6 +2,8 @@ import type { EipConfig } from "@eip/config";
 import type { ClassifiedEntity, Entity } from "@eip/analyzer";
 import { BuildMetrics } from "./performance/index.js";
 
+export type { ClassifiedEntity, Entity } from "@eip/analyzer";
+
 export interface RepositoryModel {
   config: EipConfig;
   metrics: BuildMetrics;

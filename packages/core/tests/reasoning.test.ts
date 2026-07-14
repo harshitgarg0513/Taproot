@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { explainComponent } from "../src/reasoning/explain.js";
+import { explain } from "../src/reasoning/explainBuilder.js";
 import type { RepositoryModel } from "../src/types.js";
 
 describe("reasoning explain", () => {
@@ -29,6 +30,37 @@ describe("reasoning explain", () => {
 
     expect(explanation?.component).toBe("buildRepositoryModel");
     expect(explanation?.file).toBeTruthy();
+  });
+
+  it("builds a responsibility-based explanation for a classified entity", () => {
+    const model = createModel();
+    model.classified = [
+      {
+        entity: {
+          id: "auth-service",
+          kind: "Class",
+          name: "AuthService",
+          file: "src/auth/auth.service.ts",
+          line: 1,
+        },
+        labels: [
+          {
+            type: "service",
+            confidence: 0.99,
+            signals: [
+              { name: "name:service", score: 0.4 },
+              { name: "folder:service", score: 0.3 },
+              { name: "file:service", score: 0.3 },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const explanation = explain(model, "AuthService");
+
+    expect(explanation?.responsibility).toBe("Business logic layer.");
+    expect(explanation?.classification[0]?.type).toBe("service");
   });
 });
 

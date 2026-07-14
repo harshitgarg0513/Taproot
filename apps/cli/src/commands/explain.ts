@@ -1,10 +1,6 @@
-import {
-  buildRepositoryModel,
-  explainComponent,
-  formatExplain,
-} from "@eip/core";
+import { buildRepositoryModel, explain, printExplain } from "@eip/core";
 
-export async function explain(repo: string, target: string) {
+export async function explainCommand(repo: string, entity: string) {
   const result = await buildRepositoryModel(repo);
 
   if (!result.success) {
@@ -12,12 +8,12 @@ export async function explain(repo: string, target: string) {
     return;
   }
 
-  const explanation = explainComponent(result.data, target);
+  const explanation = explain(result.data, entity);
 
   if (!explanation) {
-    console.log("Component not found.");
+    console.log("Entity not found.");
     return;
   }
 
-  formatExplain(explanation);
+  printExplain(explanation);
 }
