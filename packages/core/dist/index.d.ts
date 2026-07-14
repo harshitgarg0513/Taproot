@@ -77,8 +77,16 @@ declare function dependentsOf(model: RepositoryModel, file: string): {
 
 declare function impactedFiles(model: RepositoryModel, file: string): string[];
 
+interface ImpactResult {
+    changedFile: string;
+    impactedFiles: string[];
+    impactedComponents: string[];
+    impactedSymbols: string[];
+}
+declare function analyzeImpact(model: RepositoryModel, changedFile: string): ImpactResult;
+
 declare function buildKnowledge(repo: string): Promise<KnowledgeGraph>;
 
 declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
 
-export { type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents };
+export { type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, dependenciesOf, dependentsOf, findComponent, findSymbol, impactedFiles, listComponents };

@@ -46,6 +46,39 @@ function impactedFiles(model, file) {
   return [...visited];
 }
 
+// src/query/impactAnalyzer.ts
+function analyzeImpact(model, changedFile) {
+  const impactedFiles2 = /* @__PURE__ */ new Set();
+  const impactedComponents = /* @__PURE__ */ new Set();
+  const impactedSymbols = /* @__PURE__ */ new Set();
+  function dfs(file) {
+    if (impactedFiles2.has(file)) return;
+    impactedFiles2.add(file);
+    for (const edge of model.relationships) {
+      if (edge.to === file) {
+        dfs(edge.from);
+      }
+    }
+  }
+  dfs(changedFile);
+  for (const symbol of model.symbols) {
+    if (impactedFiles2.has(symbol.file)) {
+      impactedSymbols.add(symbol.name);
+    }
+  }
+  for (const component of model.components) {
+    if (impactedFiles2.has(component.file)) {
+      impactedComponents.add(component.name);
+    }
+  }
+  return {
+    changedFile,
+    impactedFiles: [...impactedFiles2],
+    impactedComponents: [...impactedComponents],
+    impactedSymbols: [...impactedSymbols]
+  };
+}
+
 // src/knowledge/graph.ts
 function buildKnowledgeGraph(model) {
   const graph = {
@@ -99,6 +132,7 @@ async function buildKnowledge(repo) {
   return buildKnowledgeGraph(model);
 }
 export {
+  analyzeImpact,
   buildKnowledge,
   buildKnowledgeGraph,
   buildRepositoryModel,

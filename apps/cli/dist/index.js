@@ -133,6 +133,37 @@ async function knowledge(repo) {
   console.log("Edges :", graph2.edges.length);
 }
 
+// src/commands/impact.ts
+import { buildRepositoryModel as buildRepositoryModel3, analyzeImpact } from "@eip/core";
+async function impact(repo, file) {
+  const model2 = await buildRepositoryModel3(repo);
+  const result = analyzeImpact(model2, file);
+  console.log();
+  console.log("Impact Analysis");
+  console.log("-----------------------");
+  console.log();
+  console.log("Changed File:");
+  console.log(result.changedFile);
+  console.log();
+  console.log("Impacted Files");
+  console.log("----------------");
+  for (const impactedFile of result.impactedFiles) {
+    console.log(impactedFile);
+  }
+  console.log();
+  console.log("Impacted Components");
+  console.log("----------------");
+  for (const component of result.impactedComponents) {
+    console.log(component);
+  }
+  console.log();
+  console.log("Impacted Symbols");
+  console.log("----------------");
+  for (const symbol of result.impactedSymbols) {
+    console.log(symbol);
+  }
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -155,5 +186,8 @@ program.command("query").argument("<repo>").argument("<type>").argument("<value>
 program.command("model").argument("[path]", ".").action(model);
 program.command("knowledge").argument("[path]", ".").action((targetPath) => {
   void knowledge(targetPath);
+});
+program.command("impact").argument("<repo>").argument("<file>").action((repo, file) => {
+  void impact(repo, file);
 });
 program.parse();

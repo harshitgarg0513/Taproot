@@ -8,6 +8,7 @@ import { inspect } from "./commands/inspect";
 import { query } from "./commands/query";
 import { model } from "./commands/model";
 import { knowledge } from "./commands/knowledge";
+import { impact } from "./commands/impact";
 
 const program = new Command();
 
@@ -61,6 +62,14 @@ program
   .argument("[path]", ".")
   .action((targetPath: string) => {
     void knowledge(targetPath);
+  });
+
+program
+  .command("impact")
+  .argument("<repo>")
+  .argument("<file>")
+  .action((repo: string, file: string) => {
+    void impact(repo, file);
   });
 
 program.parse();
