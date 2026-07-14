@@ -3,36 +3,63 @@ import { analyzeRepository } from "@eip/analyzer";
 import { err, ok } from "@eip/shared";
 
 // src/cache/cache.ts
-var cache = /* @__PURE__ */ new Map();
+import fs from "fs";
+import path from "path";
+function getCacheFilePath() {
+  return path.resolve(process.cwd(), ".eip-cache.json");
+}
+function readCache() {
+  const cacheFile = getCacheFilePath();
+  if (!fs.existsSync(cacheFile)) {
+    return /* @__PURE__ */ new Map();
+  }
+  try {
+    const raw = fs.readFileSync(cacheFile, "utf8");
+    const parsed = JSON.parse(raw);
+    return new Map(Object.entries(parsed));
+  } catch {
+    return /* @__PURE__ */ new Map();
+  }
+}
+function writeCache(cache) {
+  const cacheFile = getCacheFilePath();
+  fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+  fs.writeFileSync(cacheFile, JSON.stringify(Object.fromEntries(cache.entries()), null, 2));
+}
 function getCachedModel(key) {
-  const entry = cache.get(key);
+  const entry = readCache().get(key);
   if (!entry) return null;
   return entry.model;
 }
 function setCachedModel(key, model) {
+  const cache = readCache();
   cache.set(key, {
     model,
     timestamp: Date.now()
   });
+  writeCache(cache);
 }
 function clearCache() {
-  cache.clear();
+  const cacheFile = getCacheFilePath();
+  if (fs.existsSync(cacheFile)) {
+    fs.unlinkSync(cacheFile);
+  }
 }
 function cacheSize() {
-  return cache.size;
+  return readCache().size;
 }
 
 // src/cache/key.ts
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
+import fs2 from "fs";
+import path2 from "path";
 function walk(dir, files) {
-  const entries = fs.readdirSync(dir, {
+  const entries = fs2.readdirSync(dir, {
     withFileTypes: true
   });
   for (const entry of entries) {
     if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
-    const full = path.join(dir, entry.name);
+    const full = path2.join(dir, entry.name);
     if (entry.isDirectory()) walk(full, files);
     else files.push(full);
   }
@@ -43,7 +70,7 @@ function createCacheKey(repo) {
   const hash = crypto.createHash("sha256");
   files.sort();
   for (const file of files) {
-    const stat = fs.statSync(file);
+    const stat = fs2.statSync(file);
     hash.update(file);
     hash.update(stat.mtimeMs.toString());
     hash.update(stat.size.toString());

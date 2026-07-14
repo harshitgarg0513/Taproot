@@ -8,10 +8,10 @@ export function impactedFiles(model: RepositoryModel, file: string) {
 
     visited.add(current);
 
-    const next = model.relationships.filter((r) => r.to === current);
+    const next = model.relationships.filter((r) => r.from === current);
 
     for (const edge of next) {
-      dfs(edge.from);
+      dfs(edge.to);
     }
   }
 
