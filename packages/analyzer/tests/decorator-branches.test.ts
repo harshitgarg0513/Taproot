@@ -21,7 +21,7 @@ describe("decorator extractor branches", () => {
       `,
       ts.ScriptTarget.ES2022,
       true,
-      ts.ScriptKind.TS
+      ts.ScriptKind.TS,
     );
 
     const components = extractDecoratorComponents(source);

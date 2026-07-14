@@ -6,7 +6,9 @@ import { detectProject } from "./detector.js";
 import { RepositorySnapshot } from "./types.js";
 import { RepositoryNotFoundError, Result, err, ok } from "@eip/shared";
 
-export async function observeRepository(root: string): Promise<Result<RepositorySnapshot>> {
+export async function observeRepository(
+  root: string,
+): Promise<Result<RepositorySnapshot>> {
   const start = performance.now();
 
   if (!(await fs.pathExists(root))) {

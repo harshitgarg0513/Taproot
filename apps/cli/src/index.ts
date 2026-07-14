@@ -12,7 +12,7 @@ import { impact } from "./commands/impact";
 import { search } from "./commands/search";
 import { cache } from "./commands/cache";
 import { benchmark } from "./commands/benchmark";
-import { config as configCommand } from "./commands/config";
+import { config as configCommand } from "./commands/config.js";
 
 const program = new Command();
 
@@ -56,10 +56,7 @@ program
     void query(repo, type, value);
   });
 
-program
-  .command("model")
-  .argument("[path]", ".")
-  .action(model);
+program.command("model").argument("[path]", ".").action(model);
 
 program
   .command("knowledge")

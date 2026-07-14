@@ -33,7 +33,10 @@ function writeCache(cache: Map<string, CacheEntry>) {
   const cacheFile = getCacheFilePath();
 
   fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-  fs.writeFileSync(cacheFile, JSON.stringify(Object.fromEntries(cache.entries()), null, 2));
+  fs.writeFileSync(
+    cacheFile,
+    JSON.stringify(Object.fromEntries(cache.entries()), null, 2),
+  );
 }
 
 export function getCachedModel(key: string): RepositoryModel | null {

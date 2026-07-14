@@ -9,7 +9,7 @@ export interface DetectionResult {
 
 export async function detectProject(
   root: string,
-  extensions: Set<string>
+  extensions: Set<string>,
 ): Promise<DetectionResult> {
   const languages: string[] = [];
 
@@ -37,10 +37,8 @@ export async function detectProject(
     else if (deps.react) framework = "React";
     else if (deps.express) framework = "Express";
 
-    if (pkg.packageManager?.startsWith("pnpm"))
-      packageManager = "pnpm";
-    else if (pkg.packageManager?.startsWith("yarn"))
-      packageManager = "yarn";
+    if (pkg.packageManager?.startsWith("pnpm")) packageManager = "pnpm";
+    else if (pkg.packageManager?.startsWith("yarn")) packageManager = "yarn";
     else packageManager = "npm";
   }
 

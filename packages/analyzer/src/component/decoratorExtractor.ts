@@ -9,7 +9,9 @@ function hasDecorator(node: ts.ClassDeclaration, name: string) {
 
   return decorators.some((decorator) => {
     const expression = decorator.expression;
-    const target = ts.isCallExpression(expression) ? expression.expression : expression;
+    const target = ts.isCallExpression(expression)
+      ? expression.expression
+      : expression;
 
     return target.getText() === name || target.getText().endsWith(`.${name}`);
   });

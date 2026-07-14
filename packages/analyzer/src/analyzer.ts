@@ -10,7 +10,9 @@ import { buildCallGraph } from "./graph/callGraph.js";
 import { Component, RepositoryAnalysis } from "./types.js";
 import { Result, err, ok } from "@eip/shared";
 
-export async function analyzeRepository(root: string): Promise<Result<RepositoryAnalysis>> {
+export async function analyzeRepository(
+  root: string,
+): Promise<Result<RepositoryAnalysis>> {
   try {
     const files = await fg(["**/*.ts"], {
       cwd: root,
@@ -50,6 +52,10 @@ export async function analyzeRepository(root: string): Promise<Result<Repository
 
     return ok(analysis);
   } catch (error) {
-    return err(error instanceof Error ? error : new Error("Failed to analyze repository"));
+    return err(
+      error instanceof Error
+        ? error
+        : new Error("Failed to analyze repository"),
+    );
   }
 }

@@ -2,11 +2,13 @@ import path from "node:path";
 
 import { Relationship, RepositoryAnalysis } from "../types.js";
 
-export function buildDependencyGraph(analysis: RepositoryAnalysis): Relationship[] {
+export function buildDependencyGraph(
+  analysis: RepositoryAnalysis,
+): Relationship[] {
   const relationships: Relationship[] = [];
 
   const projectFiles = new Set(
-    analysis.files.map((file) => path.normalize(path.resolve(file.path)))
+    analysis.files.map((file) => path.normalize(path.resolve(file.path))),
   );
 
   for (const file of analysis.files) {
@@ -21,7 +23,9 @@ export function buildDependencyGraph(analysis: RepositoryAnalysis): Relationship
 
       if (!specifier.startsWith(".")) continue;
 
-      const absolute = path.normalize(path.resolve(path.dirname(file.path), specifier + ".ts"));
+      const absolute = path.normalize(
+        path.resolve(path.dirname(file.path), specifier + ".ts"),
+      );
 
       if (!projectFiles.has(absolute)) continue;
 

@@ -2,13 +2,19 @@ import Parser from "tree-sitter";
 
 import { CallRelationship } from "../types.js";
 
-export function buildCallGraph(tree: Parser.Tree, file: string): CallRelationship[] {
+export function buildCallGraph(
+  tree: Parser.Tree,
+  file: string,
+): CallRelationship[] {
   const calls: CallRelationship[] = [];
 
   let currentFunction = "GLOBAL";
 
   function visit(node: Parser.SyntaxNode) {
-    if (node.type === "function_declaration" || node.type === "method_definition") {
+    if (
+      node.type === "function_declaration" ||
+      node.type === "method_definition"
+    ) {
       const name = node.childForFieldName("name")?.text;
 
       if (name) {

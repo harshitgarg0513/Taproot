@@ -8,7 +8,12 @@ function walk(dir: string, files: string[]) {
   });
 
   for (const entry of entries) {
-    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
+    if (
+      entry.name === "node_modules" ||
+      entry.name === ".git" ||
+      entry.name === "dist"
+    )
+      continue;
 
     const full = path.join(dir, entry.name);
 

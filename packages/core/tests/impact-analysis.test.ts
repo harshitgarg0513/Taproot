@@ -4,12 +4,36 @@ import type { RepositoryModel } from "../src/types";
 
 const model: RepositoryModel = {
   components: [
-    { id: "comp-1", name: "AuthService", type: "Service", file: "src/auth.ts", line: 1 },
-    { id: "comp-2", name: "UserController", type: "Controller", file: "src/user.ts", line: 5 },
+    {
+      id: "comp-1",
+      name: "AuthService",
+      type: "Service",
+      file: "src/auth.ts",
+      line: 1,
+    },
+    {
+      id: "comp-2",
+      name: "UserController",
+      type: "Controller",
+      file: "src/user.ts",
+      line: 5,
+    },
   ],
   symbols: [
-    { id: "sym-1", name: "authenticate", kind: "function", file: "src/auth.ts", line: 2 },
-    { id: "sym-2", name: "login", kind: "function", file: "src/user.ts", line: 6 },
+    {
+      id: "sym-1",
+      name: "authenticate",
+      kind: "function",
+      file: "src/auth.ts",
+      line: 2,
+    },
+    {
+      id: "sym-2",
+      name: "login",
+      kind: "function",
+      file: "src/user.ts",
+      line: 6,
+    },
   ],
   relationships: [
     { from: "src/user.ts", to: "src/auth.ts", type: "imports" },

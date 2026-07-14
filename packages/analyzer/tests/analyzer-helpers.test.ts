@@ -32,16 +32,28 @@ describe("analyzer helpers", () => {
   });
 
   it("builds dependency graph", () => {
-    const analysis = {
+    const analysis: {
+      files: Array<{
+        path: string;
+        symbols: Array<{ kind: string; name: string }>;
+      }>;
+      symbols: unknown[];
+      relationships: unknown[];
+      components: unknown[];
+      callGraph: unknown[];
+    } = {
       files: [
-        { path: "src/a.ts", symbols: [{ kind: "import", name: "import x from './b'" }] },
+        {
+          path: "src/a.ts",
+          symbols: [{ kind: "import", name: "import x from './b'" }],
+        },
         { path: "src/b.ts", symbols: [] },
       ],
       symbols: [],
       relationships: [],
       components: [],
       callGraph: [],
-    } as any;
+    };
 
     const relationships = buildDependencyGraph(analysis);
 
@@ -49,7 +61,9 @@ describe("analyzer helpers", () => {
   });
 
   it("extracts decorator components", () => {
-    const source = createProgram(["packages/core/src/builder.ts"]).getSourceFile("packages/core/src/builder.ts");
+    const source = createProgram([
+      "packages/core/src/builder.ts",
+    ]).getSourceFile("packages/core/src/builder.ts");
 
     expect(source).toBeTruthy();
 

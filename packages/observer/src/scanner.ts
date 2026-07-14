@@ -18,7 +18,7 @@ export async function scanRepository(root: string): Promise<ScanResult> {
     });
 
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
+      if (IGNORE.has(entry.name) || entry.name.startsWith(".")) continue;
 
       const full = path.join(dir, entry.name);
 

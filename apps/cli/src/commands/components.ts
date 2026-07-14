@@ -12,10 +12,14 @@ export async function components(repo: string) {
 
   console.log();
   console.log("Components");
-  console.log("-------------------------" );
+  console.log("-------------------------");
 
   for (const component of analysis.components) {
-    console.log(`${component.type.padEnd(15)}`, component.name.padEnd(30), `(${component.file.split("/").pop()})`);
+    console.log(
+      `${component.type.padEnd(15)}`,
+      component.name.padEnd(30),
+      `(${component.file.split("/").pop()})`,
+    );
   }
 
   console.log();

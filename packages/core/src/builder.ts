@@ -4,11 +4,17 @@ import { observeRepository } from "@eip/observer";
 
 import { RepositoryModel } from "./types.js";
 import { Result, err, ok } from "@eip/shared";
-import { createCacheKey, getCachedModel, setCachedModel } from "./cache/index.js";
+import {
+  createCacheKey,
+  getCachedModel,
+  setCachedModel,
+} from "./cache/index.js";
 import { Timer } from "./performance/index.js";
 import { buildKnowledgeGraph } from "./knowledge/graph.js";
 
-export async function buildRepositoryModel(repo: string): Promise<Result<RepositoryModel>> {
+export async function buildRepositoryModel(
+  repo: string,
+): Promise<Result<RepositoryModel>> {
   const key = createCacheKey(repo);
   const cached = getCachedModel(key);
 
@@ -59,7 +65,9 @@ export async function buildRepositoryModel(repo: string): Promise<Result<Reposit
 
   const components = analysis.components;
   const symbols = analysis.symbols;
-  const componentIndex = new Map(components.map((component) => [component.id, component]));
+  const componentIndex = new Map(
+    components.map((component) => [component.id, component]),
+  );
   const symbolIndex = new Map(symbols.map((symbol) => [symbol.id, symbol]));
 
   const model = {

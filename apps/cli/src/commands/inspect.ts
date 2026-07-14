@@ -34,13 +34,19 @@ export async function inspect(path: string) {
   console.log("Directories      :", snapshot.totalDirectories);
 
   const classes = analysis.symbols.filter((s) => s.kind === "class").length;
-  const functions = analysis.symbols.filter((s) => s.kind === "function").length;
+  const functions = analysis.symbols.filter(
+    (s) => s.kind === "function",
+  ).length;
   const methods = analysis.symbols.filter((s) => s.kind === "method").length;
-  const interfaces = analysis.symbols.filter((s) => s.kind === "interface").length;
+  const interfaces = analysis.symbols.filter(
+    (s) => s.kind === "interface",
+  ).length;
   const types = analysis.symbols.filter((s) => s.kind === "type").length;
   const enums = analysis.symbols.filter((s) => s.kind === "enum").length;
   const imports = analysis.symbols.filter((s) => s.kind === "import").length;
-  const exportsCount = analysis.symbols.filter((s) => s.kind === "export").length;
+  const exportsCount = analysis.symbols.filter(
+    (s) => s.kind === "export",
+  ).length;
 
   console.log("TS Files         :", analysis.files.length);
   console.log("Symbols          :", analysis.symbols.length);
@@ -55,11 +61,21 @@ export async function inspect(path: string) {
   console.log("Relationships    :", analysis.relationships.length);
   console.log("Function Calls   :", analysis.callGraph.length);
 
-  const controllerCount = analysis.components.filter((component) => component.type === "Controller").length;
-  const serviceCount = analysis.components.filter((component) => component.type === "Service").length;
-  const moduleCount = analysis.components.filter((component) => component.type === "Module").length;
-  const repositoryCount = analysis.components.filter((component) => component.type === "Repository").length;
-  const entityCount = analysis.components.filter((component) => component.type === "Entity").length;
+  const controllerCount = analysis.components.filter(
+    (component) => component.type === "Controller",
+  ).length;
+  const serviceCount = analysis.components.filter(
+    (component) => component.type === "Service",
+  ).length;
+  const moduleCount = analysis.components.filter(
+    (component) => component.type === "Module",
+  ).length;
+  const repositoryCount = analysis.components.filter(
+    (component) => component.type === "Repository",
+  ).length;
+  const entityCount = analysis.components.filter(
+    (component) => component.type === "Entity",
+  ).length;
 
   console.log("Components       :", analysis.components.length);
   console.log("Controllers      :", controllerCount);

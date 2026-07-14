@@ -19,7 +19,9 @@ export async function query(repo: string, type: string, value: string) {
 
     case "symbol": {
       const symbols = findSymbol(model, value);
-      console.log(symbols.length > 0 ? symbols : `No symbol named "${value}" found.`);
+      console.log(
+        symbols.length > 0 ? symbols : `No symbol named "${value}" found.`,
+      );
       break;
     }
 

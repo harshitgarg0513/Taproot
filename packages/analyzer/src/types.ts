@@ -35,12 +35,7 @@ export interface CallRelationship {
 }
 
 export type ComponentType =
-  | "Controller"
-  | "Service"
-  | "Module"
-  | "Repository"
-  | "Entity"
-  | "Unknown";
+  "Controller" | "Service" | "Module" | "Repository" | "Entity" | "Unknown";
 
 export interface Component {
   id: string;

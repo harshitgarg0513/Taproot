@@ -7,11 +7,18 @@ export interface SearchResult {
   files: string[];
 }
 
-export function searchRepository(model: RepositoryModel, query: string): Result<SearchResult> {
+export function searchRepository(
+  model: RepositoryModel,
+  query: string,
+): Result<SearchResult> {
   const q = query.toLowerCase();
 
-  const components = model.components.filter((component) => component.name.toLowerCase().includes(q));
-  const symbols = model.symbols.filter((symbol) => symbol.name.toLowerCase().includes(q));
+  const components = model.components.filter((component) =>
+    component.name.toLowerCase().includes(q),
+  );
+  const symbols = model.symbols.filter((symbol) =>
+    symbol.name.toLowerCase().includes(q),
+  );
 
   const files = [
     ...new Set([

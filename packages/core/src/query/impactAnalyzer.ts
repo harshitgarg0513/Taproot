@@ -8,7 +8,10 @@ export interface ImpactResult {
   impactedSymbols: string[];
 }
 
-export function analyzeImpact(model: RepositoryModel, changedFile: string): Result<ImpactResult> {
+export function analyzeImpact(
+  model: RepositoryModel,
+  changedFile: string,
+): Result<ImpactResult> {
   const impactedFiles = new Set<string>();
   const impactedComponents = new Set<string>();
   const impactedSymbols = new Set<string>();
