@@ -1,0 +1,15 @@
+{
+  "name": "@eip/analyzer",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-typescript": "^0.23.2",
+    "fast-glob": "^3.3.3"
+  }
+}

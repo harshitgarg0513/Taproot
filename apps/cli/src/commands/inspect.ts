@@ -1,9 +1,11 @@
 import pc from "picocolors";
+import { analyzeRepository } from "@eip/analyzer";
 import { observeRepository } from "@eip/observer";
 import { formatDuration } from "@eip/shared";
 
 export async function inspect(path: string) {
   const snapshot = await observeRepository(path);
+  const analysis = await analyzeRepository(path);
 
   console.log();
   console.log(pc.cyan("Engineering Intelligence Platform"));
@@ -16,6 +18,15 @@ export async function inspect(path: string) {
   console.log("Git              :", snapshot.hasGit ? "Yes" : "No");
   console.log("Files            :", snapshot.totalFiles);
   console.log("Directories      :", snapshot.totalDirectories);
+
+  const functionCount = analysis.files.reduce((a, b) => a + b.functions.length, 0);
+  const classCount = analysis.files.reduce((a, b) => a + b.classes.length, 0);
+  const importCount = analysis.files.reduce((a, b) => a + b.imports.length, 0);
+
+  console.log("TS Files         :", analysis.files.length);
+  console.log("Classes          :", classCount);
+  console.log("Functions        :", functionCount);
+  console.log("Imports          :", importCount);
   console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
   console.log();
 }

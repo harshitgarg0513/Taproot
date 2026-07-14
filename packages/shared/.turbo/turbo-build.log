@@ -8,7 +8,7 @@
 [34mCLI[39m Target: es2022
 [34mESM[39m Build start
 [32mESM[39m [1mdist/index.js [22m[32m247.00 B[39m
-[32mESM[39m ⚡️ Build success in 197ms
+[32mESM[39m ⚡️ Build success in 68ms
 DTS Build start
-DTS ⚡️ Build success in 445ms
+DTS ⚡️ Build success in 505ms
 DTS dist/index.d.ts 147.00 B

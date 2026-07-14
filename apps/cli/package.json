@@ -10,6 +10,7 @@
     "build": "tsup src/index.ts --format esm --dts --clean"
   },
   "dependencies": {
+    "@eip/analyzer": "workspace:*",
     "@eip/observer": "workspace:*",
     "@eip/shared": "workspace:*",
     "commander": "^14.0.0",
