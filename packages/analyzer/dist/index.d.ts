@@ -15,6 +15,11 @@ interface Relationship {
     to: string;
     type: "IMPORTS";
 }
+interface CallRelationship {
+    caller: string;
+    callee: string;
+    file: string;
+}
 type ComponentType = "Controller" | "Service" | "Module" | "Repository" | "Entity" | "Unknown";
 interface Component {
     id: string;
@@ -28,8 +33,9 @@ interface RepositoryAnalysis {
     symbols: SymbolNode[];
     relationships: Relationship[];
     components: Component[];
+    callGraph: CallRelationship[];
 }
 
 declare function analyzeRepository(root: string): Promise<RepositoryAnalysis>;
 
-export { type Component, type ComponentType, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };
+export { type CallRelationship, type Component, type ComponentType, type ParsedFile, type Relationship, type RepositoryAnalysis, type SymbolKind, type SymbolNode, analyzeRepository };

@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { Relationship, RepositoryAnalysis } from "./types";
+import { Relationship, RepositoryAnalysis } from "../types.js";
 
 export function buildDependencyGraph(analysis: RepositoryAnalysis): Relationship[] {
   const relationships: Relationship[] = [];

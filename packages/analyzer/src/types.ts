@@ -28,6 +28,12 @@ export interface Relationship {
   type: "IMPORTS";
 }
 
+export interface CallRelationship {
+  caller: string;
+  callee: string;
+  file: string;
+}
+
 export type ComponentType =
   | "Controller"
   | "Service"
@@ -49,4 +55,5 @@ export interface RepositoryAnalysis {
   symbols: SymbolNode[];
   relationships: Relationship[];
   components: Component[];
+  callGraph: CallRelationship[];
 }

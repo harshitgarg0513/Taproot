@@ -1,11 +1,13 @@
 import fg from "fast-glob";
 import { readFile } from "node:fs/promises";
 
-import { extractComponents } from "./component.js";
-import { buildDependencyGraph } from "./graph.js";
-import { parse } from "./parser.js";
-import { buildSymbolTable } from "./symbolWalker.js";
-import { RepositoryAnalysis } from "./types.js";
+import { buildDependencyGraph } from "./graph/dependencyGraph.js";
+import { parse } from "./parser/parser.js";
+import { buildSymbolTable } from "./parser/symbolWalker.js";
+import { createProgram } from "./tsCompiler.js";
+import { extractDecoratorComponents } from "./component/decoratorExtractor.js";
+import { buildCallGraph } from "./graph/callGraph.js";
+import { Component, RepositoryAnalysis } from "./types.js";
 
 export async function analyzeRepository(root: string): Promise<RepositoryAnalysis> {
   const files = await fg(["**/*.ts"], {
@@ -19,6 +21,7 @@ export async function analyzeRepository(root: string): Promise<RepositoryAnalysi
     symbols: [],
     relationships: [],
     components: [],
+    callGraph: [],
   };
 
   for (const file of files) {
@@ -28,10 +31,20 @@ export async function analyzeRepository(root: string): Promise<RepositoryAnalysi
 
     analysis.files.push(parsed);
     analysis.symbols.push(...parsed.symbols);
+    analysis.callGraph.push(...buildCallGraph(tree, file));
   }
 
   analysis.relationships = buildDependencyGraph(analysis);
-  analysis.components = extractComponents(analysis);
+
+  const program = createProgram(files);
+  const decoratorComponents: Component[] = [];
+
+  for (const source of program.getSourceFiles()) {
+    if (!source.fileName.startsWith(root)) continue;
+    decoratorComponents.push(...extractDecoratorComponents(source));
+  }
+
+  analysis.components = decoratorComponents;
 
   return analysis;
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { calls } from "./commands/calls";
 import { components } from "./commands/components";
 import { graph } from "./commands/graph";
 import { inspect } from "./commands/inspect";
@@ -29,6 +30,13 @@ program
   .argument("[path]", ".")
   .action((targetPath: string) => {
     void components(targetPath);
+  });
+
+program
+  .command("calls")
+  .argument("[path]", ".")
+  .action((targetPath: string) => {
+    void calls(targetPath);
   });
 
 program.parse();

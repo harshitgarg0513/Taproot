@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
 
-import { ParsedFile, SymbolNode } from "./types";
+import { ParsedFile, SymbolNode } from "../types.js";
 
 function add(output: ParsedFile, kind: SymbolNode["kind"], name: string, file: string, line: number) {
   output.symbols.push({

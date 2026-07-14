@@ -8,7 +8,7 @@ export async function components(repo: string) {
   console.log("-------------------------" );
 
   for (const component of analysis.components) {
-    console.log(`[${component.type}]`, component.name);
+    console.log(`${component.type.padEnd(15)}`, component.name.padEnd(30), `(${component.file.split("/").pop()})`);
   }
 
   console.log();

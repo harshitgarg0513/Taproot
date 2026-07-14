@@ -39,6 +39,7 @@ export async function inspect(path: string) {
   console.log("Imports          :", imports);
   console.log("Exports          :", exportsCount);
   console.log("Relationships    :", analysis.relationships.length);
+  console.log("Function Calls   :", analysis.callGraph.length);
 
   const controllerCount = analysis.components.filter((component) => component.type === "Controller").length;
   const serviceCount = analysis.components.filter((component) => component.type === "Service").length;

@@ -5,11 +5,12 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts"
+    "build": "tsup src/index.ts --format esm --dts --external typescript"
   },
   "dependencies": {
     "tree-sitter": "^0.22.4",
     "tree-sitter-typescript": "^0.23.2",
-    "fast-glob": "^3.3.3"
+    "fast-glob": "^3.3.3",
+    "typescript": "^5.9.3"
   }
 }

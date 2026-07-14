@@ -2,31 +2,7 @@
 import fg from "fast-glob";
 import { readFile } from "fs/promises";
 
-// src/component.ts
-function extractComponents(analysis) {
-  const components = [];
-  for (const file of analysis.files) {
-    for (const symbol of file.symbols) {
-      if (symbol.kind !== "class") continue;
-      let type = "Unknown";
-      if (symbol.name.endsWith("Controller")) type = "Controller";
-      else if (symbol.name.endsWith("Service")) type = "Service";
-      else if (symbol.name.endsWith("Module")) type = "Module";
-      else if (symbol.name.endsWith("Repository")) type = "Repository";
-      else if (symbol.name.endsWith("Entity")) type = "Entity";
-      components.push({
-        id: symbol.id,
-        name: symbol.name,
-        type,
-        file: symbol.file,
-        line: symbol.line
-      });
-    }
-  }
-  return components;
-}
-
-// src/graph.ts
+// src/graph/dependencyGraph.ts
 import path from "path";
 function buildDependencyGraph(analysis) {
   const relationships = [];
@@ -50,7 +26,7 @@ function buildDependencyGraph(analysis) {
   return relationships;
 }
 
-// src/parser.ts
+// src/parser/parser.ts
 import Parser from "tree-sitter";
 import TypeScript from "tree-sitter-typescript";
 var parser = new Parser();
@@ -59,7 +35,7 @@ function parse(code) {
   return parser.parse(code);
 }
 
-// src/symbolWalker.ts
+// src/parser/symbolWalker.ts
 function add(output, kind, name, file, line) {
   output.symbols.push({
     id: `${file}:${line}:${kind}:${name}`,
@@ -113,6 +89,85 @@ function buildSymbolTable(tree, file) {
   return parsed;
 }
 
+// src/tsCompiler.ts
+import ts from "typescript";
+function createProgram(rootNames) {
+  return ts.createProgram({
+    rootNames,
+    options: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.NodeNext,
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      allowJs: false,
+      skipLibCheck: true
+    }
+  });
+}
+
+// src/component/decoratorExtractor.ts
+import ts2 from "typescript";
+function hasDecorator(node, name) {
+  const decorators = ts2.getDecorators(node);
+  if (!decorators) return false;
+  return decorators.some((decorator) => {
+    const expression = decorator.expression;
+    const target = ts2.isCallExpression(expression) ? expression.expression : expression;
+    return target.getText() === name || target.getText().endsWith(`.${name}`);
+  });
+}
+function extractDecoratorComponents(source) {
+  const components = [];
+  function visit(node) {
+    if (ts2.isClassDeclaration(node) && node.name) {
+      let type = "Unknown";
+      if (hasDecorator(node, "Controller")) type = "Controller";
+      else if (hasDecorator(node, "Injectable")) type = "Service";
+      else if (hasDecorator(node, "Module")) type = "Module";
+      else if (hasDecorator(node, "Entity")) type = "Entity";
+      components.push({
+        id: `${source.fileName}:${node.name.text}`,
+        name: node.name.text,
+        type,
+        file: source.fileName,
+        line: source.getLineAndCharacterOfPosition(node.pos).line + 1
+      });
+    }
+    ts2.forEachChild(node, visit);
+  }
+  visit(source);
+  return components;
+}
+
+// src/graph/callGraph.ts
+function buildCallGraph(tree, file) {
+  const calls = [];
+  let currentFunction = "GLOBAL";
+  function visit(node) {
+    if (node.type === "function_declaration" || node.type === "method_definition") {
+      const name = node.childForFieldName("name")?.text;
+      if (name) {
+        currentFunction = name;
+      }
+    }
+    if (node.type === "call_expression") {
+      const fn = node.childForFieldName("function");
+      if (fn) {
+        calls.push({
+          caller: currentFunction,
+          callee: fn.text,
+          file
+        });
+      }
+    }
+    for (const child of node.children) {
+      visit(child);
+    }
+  }
+  visit(tree.rootNode);
+  return calls;
+}
+
 // src/analyzer.ts
 async function analyzeRepository(root) {
   const files = await fg(["**/*.ts"], {
@@ -124,7 +179,8 @@ async function analyzeRepository(root) {
     files: [],
     symbols: [],
     relationships: [],
-    components: []
+    components: [],
+    callGraph: []
   };
   for (const file of files) {
     const source = await readFile(file, "utf8");
@@ -132,9 +188,16 @@ async function analyzeRepository(root) {
     const parsed = buildSymbolTable(tree, file);
     analysis.files.push(parsed);
     analysis.symbols.push(...parsed.symbols);
+    analysis.callGraph.push(...buildCallGraph(tree, file));
   }
   analysis.relationships = buildDependencyGraph(analysis);
-  analysis.components = extractComponents(analysis);
+  const program = createProgram(files);
+  const decoratorComponents = [];
+  for (const source of program.getSourceFiles()) {
+    if (!source.fileName.startsWith(root)) continue;
+    decoratorComponents.push(...extractDecoratorComponents(source));
+  }
+  analysis.components = decoratorComponents;
   return analysis;
 }
 export {
