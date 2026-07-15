@@ -1,5 +1,7 @@
 import { EipConfig } from '@eip/config';
+import * as _eip_analyzer from '@eip/analyzer';
 import { Entity, ClassifiedEntity } from '@eip/analyzer';
+export { ClassifiedEntity, Entity } from '@eip/analyzer';
 import { Result } from '@eip/shared';
 
 declare class Timer {
@@ -138,21 +140,58 @@ declare function cacheSize(): number;
 
 declare function createCacheKey(repo: string): string;
 
-interface ExplainResult {
-    component: string;
-    type: string;
-    file: string;
-    symbols: string[];
+interface DependencySummary {
     imports: string[];
-    dependencies: string[];
-    callers: string[];
-    callees: string[];
-    summary: string;
+    importedBy: string[];
+    calls: string[];
+    calledBy: string[];
 }
-declare function explainComponent(model: RepositoryModel, name: string): ExplainResult | null;
+declare function buildDependencySummary(model: RepositoryModel, file: string): DependencySummary;
 
-declare function formatExplain(result: ExplainResult): void;
+interface ExplainComponentResult {
+    component: string;
+    file: string;
+    kind: string;
+    source: "component" | "symbol";
+}
+declare function explainComponent(model: RepositoryModel, query: string): ExplainComponentResult | null;
+declare function explain(model: RepositoryModel, entityName: string): {
+    name: string;
+    kind: _eip_analyzer.EntityKind;
+    classification: {
+        type: string;
+        confidence: number;
+        signals: _eip_analyzer.ClassificationSignal[];
+    }[];
+    responsibility: string;
+    dependency: DependencySummary;
+} | null;
 
-declare function buildSummary(result: ExplainResult): string;
+declare function inferResponsibility(entity: ClassifiedEntity): "Business logic layer." | "Entry point for requests." | "Database access." | "Dependency wiring." | "General code unit.";
 
-export { type BuildMetrics, type ExplainResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type SearchResult, Timer, analyzeImpact, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, buildSummary, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explainComponent, findComponent, findSymbol, formatExplain, getCachedModel, impactedFiles, listComponents, searchRepository, setCachedModel };
+declare function printExplain(e: {
+    name: string;
+    kind: string;
+    responsibility: string;
+    classification: ClassifiedEntity["labels"];
+    dependency: {
+        imports: string[];
+        importedBy: string[];
+        calls: string[];
+        calledBy: string[];
+    };
+}): void;
+
+interface RiskResult {
+    target: string;
+    score: number;
+    level: "LOW" | "MEDIUM" | "HIGH";
+    impactedFiles: string[];
+    impactedSymbols: string[];
+    impactedComponents: string[];
+}
+declare function analyzeRisk(model: RepositoryModel, target: string): RiskResult;
+
+declare function printRisk(result: RiskResult): void;
+
+export { type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, searchRepository, setCachedModel };

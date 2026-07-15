@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainComponent } from "../src/reasoning/explain.js";
-import { explain } from "../src/reasoning/explainBuilder.js";
+import { explain, explainComponent } from "../src/reasoning/explainBuilder.js";
 import type { RepositoryModel } from "../src/types.js";
 
 describe("reasoning explain", () => {

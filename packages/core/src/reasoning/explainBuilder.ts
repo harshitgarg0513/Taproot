@@ -1,22 +1,48 @@
 import type { RepositoryModel } from "../types.js";
+import { matches } from "@eip/shared";
 import { buildDependencySummary } from "./dependencyReasoner.js";
 import { inferResponsibility } from "./responsibility.js";
 
-function normalizeTarget(value: string): string {
-  return value.trim().replace(/^\.\//, "").replace(/\\/g, "/").toLowerCase();
+export interface ExplainComponentResult {
+  component: string;
+  file: string;
+  kind: string;
+  source: "component" | "symbol";
+}
+
+export function explainComponent(model: RepositoryModel, query: string): ExplainComponentResult | null {
+  const component = model.components.find((candidate) => {
+    return matches(query, candidate.name) || matches(query, candidate.file);
+  });
+
+  if (component) {
+    return {
+      component: component.name,
+      file: component.file,
+      kind: component.type,
+      source: "component",
+    };
+  }
+
+  const symbol = model.symbols.find((candidate) => {
+    return matches(query, candidate.name) || matches(query, candidate.file);
+  });
+
+  if (symbol) {
+    return {
+      component: symbol.name,
+      file: symbol.file,
+      kind: symbol.kind,
+      source: "symbol",
+    };
+  }
+
+  return null;
 }
 
 export function explain(model: RepositoryModel, entityName: string) {
-  const normalizedTarget = normalizeTarget(entityName);
   const entity = model.classified.find((entry) => {
-    const normalizedName = normalizeTarget(entry.entity.name);
-    const normalizedFile = normalizeTarget(entry.entity.file);
-    return (
-      normalizedName === normalizedTarget ||
-      normalizedFile === normalizedTarget ||
-      normalizedName.includes(normalizedTarget) ||
-      normalizedTarget.includes(normalizedName)
-    );
+    return matches(entityName, entry.entity.name) || matches(entityName, entry.entity.file);
   });
 
   if (!entity) {

@@ -1,4 +1,5 @@
 import type { RepositoryModel } from "../types.js";
+import { matches } from "@eip/shared";
 
 export interface RiskResult {
   target: string;
@@ -9,45 +10,27 @@ export interface RiskResult {
   impactedComponents: string[];
 }
 
-function normalizeTarget(value: string): string {
-  return value.trim().replace(/^\.\//, "").replace(/\\/g, "/").toLowerCase();
-}
-
-function matchesTarget(value: string, target: string): boolean {
-  const normalizedValue = normalizeTarget(value);
-  const normalizedTarget = normalizeTarget(target);
-
-  return (
-    normalizedValue === normalizedTarget ||
-    normalizedValue.includes(normalizedTarget) ||
-    normalizedTarget.includes(normalizedValue)
-  );
-}
-
 export function analyzeRisk(model: RepositoryModel, target: string): RiskResult {
-  const normalizedTarget = normalizeTarget(target);
   const seedFiles = new Set<string>();
 
   for (const component of model.components) {
-    if (matchesTarget(component.name, normalizedTarget) || matchesTarget(component.file, normalizedTarget)) {
+    if (matches(target, component.name) || matches(target, component.file)) {
       seedFiles.add(component.file);
     }
   }
 
   for (const symbol of model.symbols) {
-    if (matchesTarget(symbol.name, normalizedTarget) || matchesTarget(symbol.file, normalizedTarget)) {
+    if (matches(target, symbol.name) || matches(target, symbol.file)) {
       seedFiles.add(symbol.file);
     }
   }
 
   const targetMatches = model.relationships.filter((relationship) => {
-    const from = normalizeTarget(relationship.from);
-    const to = normalizeTarget(relationship.to);
     return (
       seedFiles.has(relationship.from) ||
       seedFiles.has(relationship.to) ||
-      from.includes(normalizedTarget) ||
-      to.includes(normalizedTarget)
+      matches(target, relationship.from) ||
+      matches(target, relationship.to)
     );
   });
 

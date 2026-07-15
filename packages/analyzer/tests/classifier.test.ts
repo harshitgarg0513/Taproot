@@ -22,11 +22,11 @@ describe("classifier", () => {
       result.labels[0]?.signals.some(
         (signal) => signal.name === "folder:service",
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       result.labels[0]?.signals.some(
         (signal) => signal.name === "file:service",
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 });

@@ -18,7 +18,10 @@ declare class ParseError extends Error {
     constructor(file: string);
 }
 
+declare function normalize(text: string): string;
+declare function matches(query: string, candidate: string): boolean;
+
 declare function formatDuration(ms: number): string;
 declare function printSection(title: string): void;
 
-export { ParseError, RepositoryNotFoundError, type Result, UnsupportedLanguageError, err, formatDuration, ok, printSection };
+export { ParseError, RepositoryNotFoundError, type Result, UnsupportedLanguageError, err, formatDuration, matches, normalize, ok, printSection };

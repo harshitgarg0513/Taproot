@@ -29,6 +29,16 @@ var ParseError = class extends Error {
   }
 };
 
+// src/matcher.ts
+function normalize(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+function matches(query, candidate) {
+  const q = normalize(query);
+  const c = normalize(candidate);
+  return c.includes(q) || q.includes(c);
+}
+
 // src/index.ts
 function formatDuration(ms) {
   return `${ms}ms`;
@@ -45,6 +55,8 @@ export {
   UnsupportedLanguageError,
   err,
   formatDuration,
+  matches,
+  normalize,
   ok,
   printSection
 };

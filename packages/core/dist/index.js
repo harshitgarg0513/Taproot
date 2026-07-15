@@ -289,14 +289,13 @@ function analyzeImpact(model, changedFile) {
 }
 
 // src/query/search.ts
-import { ok as ok3 } from "@eip/shared";
+import { matches, ok as ok3 } from "@eip/shared";
 function searchRepository(model, query) {
-  const q = query.toLowerCase();
   const components = model.components.filter(
-    (component) => component.name.toLowerCase().includes(q)
+    (component) => matches(query, component.name) || matches(query, component.file)
   );
   const symbols = model.symbols.filter(
-    (symbol) => symbol.name.toLowerCase().includes(q)
+    (symbol) => matches(query, symbol.name) || matches(query, symbol.file)
   );
   const files = [
     .../* @__PURE__ */ new Set([
@@ -321,132 +320,199 @@ async function buildKnowledge(repo) {
   return ok4(modelResult.data.knowledgeGraph);
 }
 
-// src/reasoning/summary.ts
-function buildSummary(result) {
-  return `${result.component} is a ${result.type} defined in ${result.file}. It contains ${result.symbols.length} symbols, imports ${result.imports.length} modules and directly invokes ${result.callees.length} functions.`;
-}
+// src/reasoning/explainBuilder.ts
+import { matches as matches2 } from "@eip/shared";
 
-// src/reasoning/explain.ts
-function normalizeTarget(value) {
-  return value.trim().replace(/^\.\//, "").replace(/\\/g, "/").toLowerCase();
-}
-function resolveComponentFromTarget(model, target) {
-  const normalizedTarget = normalizeTarget(target);
-  if (model.componentIndex.has(target)) {
-    return model.componentIndex.get(target);
-  }
-  const byName = Array.from(model.components).find(
-    (entry) => normalizeTarget(entry.name) === normalizedTarget
-  );
-  if (byName) {
-    return byName;
-  }
-  const byFile = Array.from(model.components).find(
-    (entry) => normalizeTarget(entry.file) === normalizedTarget
-  );
-  if (byFile) {
-    return byFile;
-  }
-  const matchingSymbol = model.symbols.find(
-    (symbol) => normalizeTarget(symbol.name) === normalizedTarget || normalizeTarget(symbol.file) === normalizedTarget || normalizeTarget(symbol.name).includes(normalizedTarget) || normalizedTarget.includes(normalizeTarget(symbol.name))
-  );
-  if (matchingSymbol) {
-    const existingComponent = Array.from(model.components).find(
-      (entry) => normalizeTarget(entry.file) === normalizeTarget(matchingSymbol.file)
-    );
-    if (existingComponent) {
-      return existingComponent;
-    }
-    return {
-      id: matchingSymbol.id,
-      name: matchingSymbol.name,
-      type: matchingSymbol.kind,
-      file: matchingSymbol.file,
-      line: matchingSymbol.line
-    };
-  }
-  const byFilePathOnly = Array.from(model.components).find(
-    (entry) => normalizeTarget(entry.file).includes(normalizedTarget) || normalizedTarget.includes(normalizeTarget(entry.file))
-  );
-  if (byFilePathOnly) {
-    return byFilePathOnly;
-  }
-  return null;
-}
-function explainComponent(model, name) {
-  const component = resolveComponentFromTarget(model, name);
-  if (!component) {
-    return null;
-  }
-  const componentFile = component.file;
-  const symbols = model.symbols.filter((symbol) => symbol.file === componentFile).map((symbol) => symbol.name);
-  const imports = model.relationships.filter((relationship) => relationship.from === componentFile).map((relationship) => relationship.to);
-  const callers = model.callGraph.filter((call) => symbols.includes(call.callee)).map((call) => call.caller);
-  const callees = model.callGraph.filter((call) => symbols.includes(call.caller)).map((call) => call.callee);
+// src/reasoning/dependencyReasoner.ts
+function buildDependencySummary(model, file) {
+  const imports = model.relationships.filter((relationship) => relationship.from === file).map((relationship) => relationship.to);
+  const importedBy = model.relationships.filter((relationship) => relationship.to === file).map((relationship) => relationship.from);
+  const calls = model.callGraph.filter((call) => call.file === file).map((call) => call.callee);
+  const calledBy = model.callGraph.filter((call) => call.callee === file).map((call) => call.caller);
   return {
-    component: component.name,
-    type: component.type,
-    file: component.file,
-    symbols,
     imports,
-    dependencies: imports,
-    callers,
-    callees,
-    summary: buildSummary({
-      component: component.name,
-      type: component.type,
-      file: component.file,
-      symbols,
-      imports,
-      dependencies: imports,
-      callers,
-      callees,
-      summary: ""
-    })
+    importedBy,
+    calls,
+    calledBy
   };
 }
 
-// src/reasoning/formatter.ts
-function formatExplain(result) {
+// src/reasoning/responsibility.ts
+function inferResponsibility(entity) {
+  const label = entity.labels[0]?.type;
+  switch (label) {
+    case "service":
+      return "Business logic layer.";
+    case "controller":
+      return "Entry point for requests.";
+    case "repository":
+      return "Database access.";
+    case "module":
+      return "Dependency wiring.";
+    default:
+      return "General code unit.";
+  }
+}
+
+// src/reasoning/explainBuilder.ts
+function explainComponent(model, query) {
+  const component = model.components.find((candidate) => {
+    return matches2(query, candidate.name) || matches2(query, candidate.file);
+  });
+  if (component) {
+    return {
+      component: component.name,
+      file: component.file,
+      kind: component.type,
+      source: "component"
+    };
+  }
+  const symbol = model.symbols.find((candidate) => {
+    return matches2(query, candidate.name) || matches2(query, candidate.file);
+  });
+  if (symbol) {
+    return {
+      component: symbol.name,
+      file: symbol.file,
+      kind: symbol.kind,
+      source: "symbol"
+    };
+  }
+  return null;
+}
+function explain(model, entityName) {
+  const entity = model.classified.find((entry) => {
+    return matches2(entityName, entry.entity.name) || matches2(entityName, entry.entity.file);
+  });
+  if (!entity) {
+    return null;
+  }
+  const dependency = buildDependencySummary(model, entity.entity.file);
+  return {
+    name: entity.entity.name,
+    kind: entity.entity.kind,
+    classification: entity.labels,
+    responsibility: inferResponsibility(entity),
+    dependency
+  };
+}
+
+// src/reasoning/formatterV2.ts
+function printExplain(e) {
   console.log();
-  console.log("===================================");
-  console.log(result.component);
-  console.log("===================================");
+  console.log("================================");
+  console.log(e.name);
+  console.log("================================");
   console.log();
-  console.log("Type:", result.type);
-  console.log("File:", result.file);
+  console.log("Kind:", e.kind);
   console.log();
-  console.log("Symbols");
-  console.log(result.symbols);
+  console.log("Responsibility");
+  console.log(e.responsibility);
+  console.log();
+  console.log("Classification");
+  console.table(e.classification);
   console.log();
   console.log("Imports");
-  console.log(result.imports);
+  console.table(e.dependency.imports);
+  console.log();
+  console.log("Imported By");
+  console.table(e.dependency.importedBy);
   console.log();
   console.log("Calls");
-  console.log(result.callees);
+  console.table(e.dependency.calls);
   console.log();
-  console.log("Summary");
-  console.log(result.summary);
+  console.log("Called By");
+  console.table(e.dependency.calledBy);
+}
+
+// src/reasoning/risk.ts
+import { matches as matches3 } from "@eip/shared";
+function analyzeRisk(model, target) {
+  const seedFiles = /* @__PURE__ */ new Set();
+  for (const component of model.components) {
+    if (matches3(target, component.name) || matches3(target, component.file)) {
+      seedFiles.add(component.file);
+    }
+  }
+  for (const symbol of model.symbols) {
+    if (matches3(target, symbol.name) || matches3(target, symbol.file)) {
+      seedFiles.add(symbol.file);
+    }
+  }
+  const targetMatches = model.relationships.filter((relationship) => {
+    return seedFiles.has(relationship.from) || seedFiles.has(relationship.to) || matches3(target, relationship.from) || matches3(target, relationship.to);
+  });
+  const impactedFiles2 = Array.from(
+    new Set(
+      targetMatches.flatMap((relationship) => [relationship.from, relationship.to])
+    )
+  );
+  const impactedSymbols = model.symbols.filter((symbol) => impactedFiles2.includes(symbol.file)).map((symbol) => symbol.name);
+  const impactedComponents = model.classified.filter((component) => impactedFiles2.includes(component.entity.file)).map((component) => component.entity.name);
+  const score = Math.min(
+    100,
+    impactedFiles2.length * 8 + impactedSymbols.length * 0.5
+  );
+  let level;
+  if (score < 30) {
+    level = "LOW";
+  } else if (score < 70) {
+    level = "MEDIUM";
+  } else {
+    level = "HIGH";
+  }
+  return {
+    target,
+    score,
+    level,
+    impactedFiles: [...new Set(impactedFiles2)],
+    impactedSymbols: [...new Set(impactedSymbols)],
+    impactedComponents: [...new Set(impactedComponents)]
+  };
+}
+
+// src/reasoning/formatterRisk.ts
+function printRisk(result) {
+  console.log();
+  console.log("================================");
+  console.log("Risk Analysis");
+  console.log("================================");
+  console.log();
+  console.log("Target:", result.target);
+  console.log("Risk:", result.level, `(${result.score}/100)`);
+  console.log();
+  console.log("Impacted Components");
+  console.table(result.impactedComponents);
+  console.log();
+  console.log("Impacted Files");
+  console.table(result.impactedFiles);
+  console.log();
+  console.log("Impacted Symbols");
+  console.table(result.impactedSymbols);
 }
 export {
   Timer,
   analyzeImpact,
+  analyzeRisk,
+  buildDependencySummary,
   buildKnowledge,
   buildKnowledgeGraph,
   buildRepositoryModel,
-  buildSummary,
   cacheSize,
   clearCache,
   createCacheKey,
   dependenciesOf,
   dependentsOf,
+  explain,
   explainComponent,
   findComponent,
   findSymbol,
-  formatExplain,
   getCachedModel,
   impactedFiles,
+  inferResponsibility,
   listComponents,
+  printExplain,
+  printRisk,
   searchRepository,
   setCachedModel
 };

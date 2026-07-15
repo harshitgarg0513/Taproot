@@ -340,19 +340,31 @@ async function entities(repo) {
 }
 
 // src/commands/explain.ts
-import { buildRepositoryModel as buildRepositoryModel8, explainComponent, formatExplain } from "@eip/core";
-async function explain(repo, target) {
+import { buildRepositoryModel as buildRepositoryModel8, explain, printExplain } from "@eip/core";
+async function explainCommand(repo, entity) {
   const result = await buildRepositoryModel8(repo);
   if (!result.success) {
     console.error(result.error);
     return;
   }
-  const explanation = explainComponent(result.data, target);
+  const explanation = explain(result.data, entity);
   if (!explanation) {
-    console.log("Component not found.");
+    console.log("Entity not found.");
     return;
   }
-  formatExplain(explanation);
+  printExplain(explanation);
+}
+
+// src/commands/risk.ts
+import { analyzeRisk, buildRepositoryModel as buildRepositoryModel9, printRisk } from "@eip/core";
+async function risk(repo, target) {
+  const result = await buildRepositoryModel9(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const analysis = analyzeRisk(result.data, target);
+  printRisk(analysis);
 }
 
 // src/index.ts
@@ -400,6 +412,9 @@ program.command("classify").argument("[path]", ".").action((targetPath) => {
   void classify(targetPath);
 });
 program.command("explain").argument("<repo>").argument("<component>").action((repo, component) => {
-  void explain(repo, component);
+  void explainCommand(repo, component);
+});
+program.command("risk").argument("<repo>").argument("<target>").action((repo, target) => {
+  void risk(repo, target);
 });
 program.parse();
