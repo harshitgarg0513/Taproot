@@ -14,9 +14,10 @@ import { cache } from "./commands/cache";
 import { benchmark } from "./commands/benchmark";
 import { classify } from "./commands/classify";
 import { config as configCommand } from "./commands/config.js";
-import { entities } from "./commands/entities";
+import { entities } from "./commands/entities.js";
 import { explainCommand } from "./commands/explain.js";
 import { risk } from "./commands/risk.js";
+import { retrieval } from "./commands/retrieve";
 
 const program = new Command();
 
@@ -134,6 +135,14 @@ program
   .argument("<target>")
   .action((repo: string, target: string) => {
     void risk(repo, target);
+  });
+
+program
+  .command("retrieve")
+  .argument("<repo>")
+  .argument("<query>")
+  .action((repo: string, query: string) => {
+    void retrieval(repo, query);
   });
 
 program.parse();

@@ -194,4 +194,25 @@ declare function analyzeRisk(model: RepositoryModel, target: string): RiskResult
 
 declare function printRisk(result: RiskResult): void;
 
-export { type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, searchRepository, setCachedModel };
+interface RetrievalResult {
+    id: string;
+    score: number;
+    reasons: string[];
+}
+
+declare function retrieve(model: RepositoryModel, query: string): {
+    query: string;
+    tokens: string[];
+    ranked: RetrievalResult[];
+    expanded: Set<string>;
+};
+
+interface RetrievalTrace {
+    query: string;
+    tokens: string[];
+    matchedTokens: string[];
+    seedCount: number;
+    expandedCount: number;
+}
+
+export { type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, retrieve, searchRepository, setCachedModel };

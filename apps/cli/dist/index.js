@@ -367,6 +367,27 @@ async function risk(repo, target) {
   printRisk(analysis);
 }
 
+// src/commands/retrieve.ts
+import { buildRepositoryModel as buildRepositoryModel10, retrieve } from "@eip/core";
+async function retrieval(repo, query2) {
+  const result = await buildRepositoryModel10(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const retrievalResult = retrieve(result.data, query2);
+  console.log();
+  console.log("================================");
+  console.log("Seed Retrieval");
+  console.log("================================");
+  console.log();
+  console.log("Tokens", retrievalResult.tokens);
+  console.log();
+  console.table(retrievalResult.ranked);
+  console.log();
+  console.log("Expanded Nodes", retrievalResult.expanded.size);
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -416,5 +437,8 @@ program.command("explain").argument("<repo>").argument("<component>").action((re
 });
 program.command("risk").argument("<repo>").argument("<target>").action((repo, target) => {
   void risk(repo, target);
+});
+program.command("retrieve").argument("<repo>").argument("<query>").action((repo, query2) => {
+  void retrieval(repo, query2);
 });
 program.parse();

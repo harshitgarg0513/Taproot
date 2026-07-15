@@ -449,21 +449,21 @@ function analyzeRisk(model, target) {
   );
   const impactedSymbols = model.symbols.filter((symbol) => impactedFiles2.includes(symbol.file)).map((symbol) => symbol.name);
   const impactedComponents = model.classified.filter((component) => impactedFiles2.includes(component.entity.file)).map((component) => component.entity.name);
-  const score = Math.min(
+  const score2 = Math.min(
     100,
     impactedFiles2.length * 8 + impactedSymbols.length * 0.5
   );
   let level;
-  if (score < 30) {
+  if (score2 < 30) {
     level = "LOW";
-  } else if (score < 70) {
+  } else if (score2 < 70) {
     level = "MEDIUM";
   } else {
     level = "HIGH";
   }
   return {
     target,
-    score,
+    score: score2,
     level,
     impactedFiles: [...new Set(impactedFiles2)],
     impactedSymbols: [...new Set(impactedSymbols)],
@@ -490,6 +490,123 @@ function printRisk(result) {
   console.log("Impacted Symbols");
   console.table(result.impactedSymbols);
 }
+
+// src/retrieval/tokenizer.ts
+var STOP_WORDS = /* @__PURE__ */ new Set([
+  "a",
+  "an",
+  "the",
+  "to",
+  "for",
+  "of",
+  "implement",
+  "create",
+  "add",
+  "make",
+  "support",
+  "enable",
+  "allow",
+  "using",
+  "with",
+  "in",
+  "on"
+]);
+function tokenize(query) {
+  return query.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).filter((token) => !STOP_WORDS.has(token));
+}
+
+// src/retrieval/vocabulary.ts
+function buildVocabulary(model) {
+  const vocabulary = /* @__PURE__ */ new Map();
+  function add(token, id) {
+    if (!vocabulary.has(token)) {
+      vocabulary.set(token, /* @__PURE__ */ new Set());
+    }
+    vocabulary.get(token).add(id);
+  }
+  function addAliases(token, id) {
+    add(token, id);
+    if (token.length > 3 && token.endsWith("s")) {
+      add(token.slice(0, -1), id);
+    } else if (token.length > 3) {
+      add(`${token}s`, id);
+    }
+  }
+  const split = (text) => text.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_.-]/g, " ").toLowerCase().split(/\s+/).filter(Boolean);
+  for (const entity of model.entities) {
+    for (const token of split(entity.name)) {
+      addAliases(token, entity.id);
+    }
+  }
+  for (const symbol of model.symbols) {
+    for (const token of split(symbol.name)) {
+      addAliases(token, symbol.id);
+    }
+  }
+  return vocabulary;
+}
+
+// src/retrieval/candidates.ts
+function generateCandidates(query, vocabulary) {
+  const scores = /* @__PURE__ */ new Map();
+  for (const token of tokenize(query)) {
+    const ids = vocabulary.get(token);
+    if (!ids) continue;
+    for (const id of ids) {
+      scores.set(id, (scores.get(id) ?? 0) + 1);
+    }
+  }
+  return scores;
+}
+
+// src/retrieval/scorer.ts
+function score(candidateScores) {
+  const results = [];
+  for (const [id, score2] of candidateScores) {
+    results.push({
+      id,
+      score: score2,
+      reasons: ["matched repository vocabulary"]
+    });
+  }
+  results.sort((a, b) => b.score - a.score);
+  return results;
+}
+
+// src/retrieval/expander.ts
+function expand(model, seedIds) {
+  const visited = new Set(seedIds);
+  const queue = [...seedIds];
+  while (queue.length) {
+    const current = queue.shift();
+    for (const edge of model.knowledgeGraph.edges) {
+      if (edge.from === current && !visited.has(edge.to)) {
+        visited.add(edge.to);
+        queue.push(edge.to);
+      }
+      if (edge.to === current && !visited.has(edge.from)) {
+        visited.add(edge.from);
+        queue.push(edge.from);
+      }
+    }
+  }
+  return visited;
+}
+
+// src/retrieval/retrieve.ts
+function retrieve(model, query) {
+  const vocabulary = buildVocabulary(model);
+  const candidateScores = generateCandidates(query, vocabulary);
+  const ranked = score(candidateScores);
+  const seeds = new Set(ranked.slice(0, 10).map((result) => result.id));
+  const expanded = expand(model, seeds);
+  return {
+    query,
+    tokens: tokenize(query),
+    ranked,
+    expanded
+  };
+}
 export {
   Timer,
   analyzeImpact,
@@ -513,6 +630,7 @@ export {
   listComponents,
   printExplain,
   printRisk,
+  retrieve,
   searchRepository,
   setCachedModel
 };
