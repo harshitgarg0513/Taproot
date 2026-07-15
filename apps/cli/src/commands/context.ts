@@ -10,6 +10,23 @@ export async function context(repo: string, query: string) {
 
   const contextPackage = await generate(repoResult.data, query);
 
+  console.log("================================");
+  console.log("Confidence");
+  console.log(contextPackage.context.confidence.level);
+  console.log(contextPackage.context.confidence.score.toFixed(2));
+  console.log(contextPackage.context.confidence.reason);
+  if (contextPackage.context.confidence.suggestions.length > 0) {
+    console.log("Suggestions");
+    for (const suggestion of contextPackage.context.confidence.suggestions) {
+      console.log(`• ${suggestion}`);
+    }
+  }
+  console.log("================================");
+
+  if (!contextPackage.context.success) {
+    return;
+  }
+
   console.log(contextPackage.context.prompt);
   console.log();
   console.log("================================");

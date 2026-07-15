@@ -28,20 +28,16 @@ function createModel(overrides: Partial<RepositoryModel> = {}): RepositoryModel 
 }
 
 describe("buildContext", () => {
-  it("falls back to repository components when retrieval yields no expanded nodes", async () => {
-    const model = createModel({
-      components: [{ id: "component-1", name: "AuthService", type: "component", file: "src/auth.ts", line: 1 }],
-      symbols: [],
-      entities: [],
-      knowledgeGraph: {
-        nodes: [],
-        edges: [],
-      },
-    });
+  it("returns a failure result when retrieval confidence is low", async () => {
+    const model = createModel();
 
-    const result = await buildContext(model, "implement refresh tokens");
+    const result = await buildContext(model, "totally unrelated request xyz");
 
-    expect(result.budget.some((item) => item.id === "AuthService")).toBe(true);
-    expect(result.prompt).toContain("Task");
+    expect(result.success).toBe(false);
+    if (result.success) {
+      throw new Error("Expected a low-confidence failure");
+    }
+
+    expect(result.message).toContain("Unable to identify reliable repository context");
   });
 });
