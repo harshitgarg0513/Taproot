@@ -1,5 +1,6 @@
 export interface RetrievalResult {
   id: string;
+  path: string;
   score: number;
   reasons: string[];
 }
@@ -10,6 +11,7 @@ export function score(candidateScores: Map<string, number>) {
   for (const [id, score] of candidateScores) {
     results.push({
       id,
+      path: id,
       score,
       reasons: ["matched repository vocabulary"],
     });

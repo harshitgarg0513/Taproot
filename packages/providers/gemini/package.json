@@ -1,0 +1,14 @@
+{
+  "name": "@eip/gemini",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "types": "./index.ts",
+  "dependencies": {
+    "@google/genai": "^1.15.0",
+    "dotenv": "^16.4.7"
+  }
+}

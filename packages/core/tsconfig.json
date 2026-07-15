@@ -7,6 +7,7 @@
     "baseUrl": "../..",
     "paths": {
       "@eip/analyzer": ["packages/analyzer/src/index.ts"],
+      "@eip/gemini": ["packages/providers/gemini/index.ts"],
       "@eip/observer": ["packages/observer/src/index.ts"],
       "@eip/shared": ["packages/shared/src/index.ts"]
     }

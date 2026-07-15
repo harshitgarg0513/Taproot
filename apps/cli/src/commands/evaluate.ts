@@ -1,4 +1,11 @@
-import { buildRepositoryModel, evaluateCommit, printReport } from "@eip/core";
+import {
+  buildRepositoryModel,
+  evaluateCommit,
+  getChangedFiles,
+  getCommitHistory,
+  printReport,
+  shouldEvaluate,
+} from "@eip/core";
 
 export async function evaluate(repo: string) {
   const result = await buildRepositoryModel(repo);
@@ -8,13 +15,18 @@ export async function evaluate(repo: string) {
     return;
   }
 
-  /*
-   Temporary sample.
-   Sprint Release
-   will use
-   real git history.
-  */
+  const history = getCommitHistory(repo);
+  const results = [];
 
-  const metrics = evaluateCommit(result.data, "implement refresh tokens", []);
-  printReport([metrics]);
+  for (const commit of history) {
+    const files = getChangedFiles(repo, commit.hash);
+
+    if (!shouldEvaluate(commit.message, files)) {
+      continue;
+    }
+
+    results.push(evaluateCommit(result.data, commit.message, files, repo));
+  }
+
+  printReport(results);
 }

@@ -1,3 +1,4 @@
+import path from "node:path";
 import { analyzeRepository } from "@eip/analyzer";
 import { loadConfig } from "@eip/config";
 import { observeRepository } from "@eip/observer";
@@ -65,11 +66,36 @@ export async function buildRepositoryModel(
   } as RepositoryModel);
   const graphMs = graphTimer.end();
 
-  const components = analysis.components;
-  const symbols = analysis.symbols;
-  const componentIndex = new Map(
-    components.map((component) => [component.id, component]),
-  );
+  const normalizePath = (filePath: string) => {
+    const absoluteRoot = path.resolve(repo);
+    const normalized = filePath.replace(/\\/g, "/");
+    const absoluteRootNormalized = absoluteRoot.replace(/\\/g, "/");
+
+    if (normalized.startsWith(absoluteRootNormalized)) {
+      return path.relative(absoluteRoot, normalized).replace(/\\/g, "/");
+    }
+
+    return normalized.replace(/^\.\//, "");
+  };
+
+  const components = analysis.components.map((component) => ({
+    ...component,
+    file: normalizePath(component.file),
+  }));
+  const symbols = analysis.symbols.map((symbol) => ({
+    ...symbol,
+    file: normalizePath(symbol.file),
+  }));
+  const entities = analysis.entities.map((entity) => ({
+    ...entity,
+    file: normalizePath(entity.file),
+  }));
+  const relationships = analysis.relationships;
+  const callGraph = analysis.callGraph.map((call) => ({
+    ...call,
+    file: normalizePath(call.file),
+  }));
+  const componentIndex = new Map(components.map((component) => [component.id, component]));
   const symbolIndex = new Map(symbols.map((symbol) => [symbol.id, symbol]));
 
   const model: RepositoryModel = {
@@ -84,10 +110,10 @@ export async function buildRepositoryModel(
     symbolIndex,
     components,
     symbols,
-    entities: analysis.entities,
+    entities,
     classified: analysis.classified,
-    relationships: analysis.relationships,
-    callGraph: analysis.callGraph,
+    relationships,
+    callGraph,
     knowledgeGraph: graph,
   };
 

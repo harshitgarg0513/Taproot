@@ -11,6 +11,7 @@
     "@eip/anthropic": "workspace:*",
     "@eip/analyzer": "workspace:*",
     "@eip/config": "workspace:*",
+    "@eip/gemini": "workspace:*",
     "@eip/observer": "workspace:*",
     "@eip/shared": "workspace:*"
   }
