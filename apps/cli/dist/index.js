@@ -409,6 +409,18 @@ async function context(repo, query2) {
   console.log(contextPackage.prompt);
 }
 
+// src/commands/evaluate.ts
+import { buildRepositoryModel as buildRepositoryModel12, evaluateCommit, printReport } from "@eip/core";
+async function evaluate(repo) {
+  const result = await buildRepositoryModel12(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const metrics = evaluateCommit(result.data, "implement refresh tokens", []);
+  printReport([metrics]);
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -464,5 +476,8 @@ program.command("retrieve").argument("<repo>").argument("<query>").action((repo,
 });
 program.command("context").argument("<repo>").argument("<query>").action((repo, query2) => {
   void context(repo, query2);
+});
+program.command("evaluate").argument("<repo>").action((repo) => {
+  void evaluate(repo);
 });
 program.parse();

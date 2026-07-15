@@ -19,6 +19,7 @@ import { explainCommand } from "./commands/explain.js";
 import { risk } from "./commands/risk.js";
 import { retrieval } from "./commands/retrieve";
 import { context as contextCommand } from "./commands/context";
+import { evaluate as evaluateCommand } from "./commands/evaluate";
 
 const program = new Command();
 
@@ -152,6 +153,13 @@ program
   .argument("<query>")
   .action((repo: string, query: string) => {
     void contextCommand(repo, query);
+  });
+
+program
+  .command("evaluate")
+  .argument("<repo>")
+  .action((repo: string) => {
+    void evaluateCommand(repo);
   });
 
 program.parse();

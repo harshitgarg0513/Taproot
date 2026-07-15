@@ -236,4 +236,14 @@ interface AIProvider {
     complete(prompt: string): Promise<string>;
 }
 
-export { type AIProvider, type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, retrieve, searchRepository, setCachedModel };
+interface Metrics {
+    precision: number;
+    recall: number;
+    f1: number;
+}
+
+declare function evaluateCommit(model: RepositoryModel, message: string, actualFiles: string[]): Metrics;
+
+declare function printReport(results: Metrics[]): void;
+
+export { type AIProvider, type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, evaluateCommit, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printReport, printRisk, retrieve, searchRepository, setCachedModel };

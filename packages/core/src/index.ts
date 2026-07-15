@@ -7,3 +7,4 @@ export * from "./performance/index.js";
 export * from "./reasoning/index.js";
 export * from "./retrieval/index.js";
 export * from "./context/index.js";
+export * from "./evaluation/index.js";

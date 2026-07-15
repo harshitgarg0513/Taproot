@@ -685,6 +685,41 @@ function buildContext(model, query) {
     prompt
   };
 }
+
+// src/evaluation/metrics.ts
+function calculate(predicted, actual) {
+  const intersection = [...predicted].filter((x) => actual.has(x)).length;
+  const precision = intersection / Math.max(predicted.size, 1);
+  const recall = intersection / Math.max(actual.size, 1);
+  const f1 = precision + recall === 0 ? 0 : 2 * precision * recall / (precision + recall);
+  return {
+    precision,
+    recall,
+    f1
+  };
+}
+
+// src/evaluation/evaluator.ts
+function evaluateCommit(model, message, actualFiles) {
+  const retrieval = retrieve(model, message);
+  const predicted = new Set(retrieval.ranked.map((result) => result.id));
+  return calculate(predicted, new Set(actualFiles));
+}
+
+// src/evaluation/report.ts
+function printReport(results) {
+  const avg = (key) => results.reduce((sum, item) => sum + item[key], 0) / results.length;
+  console.log();
+  console.log("================================");
+  console.log("Evaluation");
+  console.log("================================");
+  console.log();
+  console.table({
+    Precision: avg("precision"),
+    Recall: avg("recall"),
+    F1: avg("f1")
+  });
+}
 export {
   Timer,
   analyzeImpact,
@@ -699,6 +734,7 @@ export {
   createCacheKey,
   dependenciesOf,
   dependentsOf,
+  evaluateCommit,
   explain,
   explainComponent,
   findComponent,
@@ -708,6 +744,7 @@ export {
   inferResponsibility,
   listComponents,
   printExplain,
+  printReport,
   printRisk,
   retrieve,
   searchRepository,
