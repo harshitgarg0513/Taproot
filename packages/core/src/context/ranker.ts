@@ -2,6 +2,7 @@ import type { RepositoryModel } from "../types.js";
 
 export interface RankedContext {
   id: string;
+  path: string;
   score: number;
   reasons: string[];
 }
@@ -29,10 +30,13 @@ export function rankContext(
     const symbol =
       model.symbolIndex.get(id) ??
       model.symbols.find((candidate) => candidate.id === id);
+
+    const path = component?.file ?? symbol?.file ?? id;
     const displayId = component?.name ?? symbol?.name ?? id;
 
     ranked.push({
       id: displayId,
+      path,
       score,
       reasons,
     });

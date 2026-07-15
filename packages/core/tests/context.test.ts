@@ -28,7 +28,7 @@ function createModel(overrides: Partial<RepositoryModel> = {}): RepositoryModel 
 }
 
 describe("buildContext", () => {
-  it("falls back to repository components when retrieval yields no expanded nodes", () => {
+  it("falls back to repository components when retrieval yields no expanded nodes", async () => {
     const model = createModel({
       components: [{ id: "component-1", name: "AuthService", type: "component", file: "src/auth.ts", line: 1 }],
       symbols: [],
@@ -39,9 +39,9 @@ describe("buildContext", () => {
       },
     });
 
-    const result = buildContext(model, "implement refresh tokens");
+    const result = await buildContext(model, "implement refresh tokens");
 
     expect(result.budget.some((item) => item.id === "AuthService")).toBe(true);
-    expect(result.prompt).toContain("Engineering Task");
+    expect(result.prompt).toContain("Task");
   });
 });

@@ -10,6 +10,7 @@ export async function context(repo: string, query: string) {
 
   const contextPackage = await generate(repoResult.data, query);
 
+  console.log(contextPackage.context.prompt);
   console.log();
   console.log("================================");
   console.log("Context Package");

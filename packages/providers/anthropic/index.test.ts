@@ -7,6 +7,7 @@ describe("Anthropic provider", () => {
   });
 
   it("throws when no API key is configured", async () => {
-    await expect(complete("hello")).rejects.toThrow("ANTHROPIC_API_KEY");
+    process.env.ANTHROPIC_API_KEY = "";
+    await expect(complete("hello")).rejects.toThrow("not configured");
   });
 });

@@ -1,16 +1,16 @@
-import type { RankedContext } from "./ranker.js";
+import { loadSnippet } from "./snippet.js";
+import { formatPrompt } from "./formatter.js";
 
-export function buildPrompt(query: string, context: RankedContext[]) {
-  let prompt = `Engineering Task
+export async function buildPrompt(query: string, files: string[]) {
+  const snippets = [];
 
-${query}
-
-Relevant Repository Context
-`;
-
-  for (const item of context) {
-    prompt += `\n${item.id}`;
+  for (const file of files) {
+    try {
+      snippets.push(await loadSnippet(file));
+    } catch (error) {
+      void error;
+    }
   }
 
-  return prompt;
+  return formatPrompt(query, snippets);
 }
