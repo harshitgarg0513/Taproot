@@ -22,7 +22,11 @@
     "build": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.125.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@eip/core": "workspace:*",
+    "vscode": "^1.1.37"
   }
 }

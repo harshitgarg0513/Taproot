@@ -1,37 +1,59 @@
 import * as vscode from "vscode";
 
-export function showEngineeringContextPanel() {
+type EngineeringContextResult =
+  | {
+      context: {
+        success: true;
+        retrieval: {
+          confidence: {
+            level: string;
+          };
+        };
+        budget: Array<{
+          path: string;
+        }>;
+      };
+      answer: string;
+    }
+  | {
+      context: {
+        success: false;
+        confidence: {
+          level: string;
+        };
+        message: string;
+      };
+      answer: string;
+    };
+
+export function render(result: EngineeringContextResult) {
   const panel = vscode.window.createWebviewPanel(
-    "eipContext",
+    "eip",
     "Engineering Context",
-    vscode.ViewColumn.One,
-    { enableScripts: true },
+    vscode.ViewColumn.Two,
+    {
+      enableScripts: true,
+    },
   );
 
+  const confidenceLevel = result.context.success ? result.context.retrieval.confidence.level : result.context.confidence.level;
+  const selectedFiles = result.context.success
+    ? result.context.budget.map((x) => `<li>${x.path}</li>`).join("")
+    : "";
+  const message = result.context.success ? "" : `<p>${result.context.message}</p>`;
+
   panel.webview.html = `
-    <html>
-      <body style="font-family: sans-serif; padding: 16px;">
-        <h2>Engineering Context</h2>
-        <hr />
-        <p><strong>Intent</strong></p>
-        <p>implement refresh tokens</p>
-        <p><strong>Selected Files</strong></p>
-        <ul>
-          <li>AuthService</li>
-          <li>TokenRepository</li>
-          <li>JwtService</li>
-        </ul>
-        <p><strong>Reasons</strong></p>
-        <ul>
-          <li>graph-degree:2</li>
-          <li>matched repository vocabulary</li>
-        </ul>
-        <p><strong>Confidence</strong></p>
-        <p>Medium</p>
-        <p><strong>Prompt</strong></p>
-        <pre>Engineering Task\nimplement refresh tokens</pre>
-        <button>Send</button>
-      </body>
-    </html>
-  `;
+<html>
+<body>
+<h2>Engineering Context</h2>
+<h3>Confidence</h3>
+<p>${confidenceLevel}</p>
+<h3>Selected Files</h3>
+<ul>${selectedFiles}</ul>
+${message}
+<h3>Gemini</h3>
+<pre>${result.answer}</pre>
+</body>
+</html>
+`;
 }

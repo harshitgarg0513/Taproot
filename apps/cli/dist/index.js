@@ -389,36 +389,70 @@ async function retrieval(repo, query2) {
 }
 
 // src/commands/context.ts
-import { buildRepositoryModel as buildRepositoryModel11, buildContext } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel11, generate } from "@eip/core";
 async function context(repo, query2) {
-  const result = await buildRepositoryModel11(repo);
-  if (!result.success) {
-    console.error(result.error);
+  const repoResult = await buildRepositoryModel11(repo);
+  if (!repoResult.success) {
+    console.error(repoResult.error);
     return;
   }
-  const contextPackage = buildContext(result.data, query2);
+  const contextPackage = await generate(repoResult.data, query2);
+  console.log("================================");
+  console.log("Confidence");
+  console.log(contextPackage.context.confidence.level);
+  console.log(contextPackage.context.confidence.score.toFixed(2));
+  console.log(contextPackage.context.confidence.reason);
+  if (contextPackage.context.confidence.suggestions.length > 0) {
+    console.log("Suggestions");
+    for (const suggestion of contextPackage.context.confidence.suggestions) {
+      console.log(`\u2022 ${suggestion}`);
+    }
+  }
+  console.log("================================");
+  if (!contextPackage.context.success) {
+    return;
+  }
+  console.log(contextPackage.context.prompt);
   console.log();
   console.log("================================");
   console.log("Context Package");
   console.log("================================");
   console.log();
   console.log("Selected Files");
-  console.table(contextPackage.budget);
+  console.table(contextPackage.context.budget);
   console.log();
   console.log("Prompt");
-  console.log(contextPackage.prompt);
+  console.log(contextPackage.context.prompt);
+  console.log();
+  console.log("Answer");
+  console.log(contextPackage.generation?.text ?? contextPackage.answer);
 }
 
 // src/commands/evaluate.ts
-import { buildRepositoryModel as buildRepositoryModel12, evaluateCommit, printReport } from "@eip/core";
+import {
+  buildRepositoryModel as buildRepositoryModel12,
+  evaluateCommit,
+  getChangedFiles,
+  getCommitHistory,
+  printReport,
+  shouldEvaluate
+} from "@eip/core";
 async function evaluate(repo) {
   const result = await buildRepositoryModel12(repo);
   if (!result.success) {
     console.error(result.error);
     return;
   }
-  const metrics = evaluateCommit(result.data, "implement refresh tokens", []);
-  printReport([metrics]);
+  const history = getCommitHistory(repo);
+  const results = [];
+  for (const commit of history) {
+    const files = getChangedFiles(repo, commit.hash);
+    if (!shouldEvaluate(commit.message, files)) {
+      continue;
+    }
+    results.push(evaluateCommit(result.data, commit.message, files, repo));
+  }
+  printReport(results);
 }
 
 // src/index.ts

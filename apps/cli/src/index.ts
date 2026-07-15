@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { calls } from "./commands/calls";
-import { components } from "./commands/components";
-import { graph } from "./commands/graph";
-import { inspect } from "./commands/inspect";
-import { query } from "./commands/query";
-import { model } from "./commands/model";
-import { knowledge } from "./commands/knowledge";
-import { impact } from "./commands/impact";
-import { search } from "./commands/search";
-import { cache } from "./commands/cache";
-import { benchmark } from "./commands/benchmark";
-import { classify } from "./commands/classify";
+import { calls } from "./commands/calls.js";
+import { components } from "./commands/components.js";
+import { graph } from "./commands/graph.js";
+import { inspect } from "./commands/inspect.js";
+import { query } from "./commands/query.js";
+import { model } from "./commands/model.js";
+import { knowledge } from "./commands/knowledge.js";
+import { impact } from "./commands/impact.js";
+import { search } from "./commands/search.js";
+import { cache } from "./commands/cache.js";
+import { benchmark } from "./commands/benchmark.js";
+import { classify } from "./commands/classify.js";
 import { config as configCommand } from "./commands/config.js";
 import { entities } from "./commands/entities.js";
 import { explainCommand } from "./commands/explain.js";
 import { risk } from "./commands/risk.js";
-import { retrieval } from "./commands/retrieve";
-import { context as contextCommand } from "./commands/context";
-import { evaluate as evaluateCommand } from "./commands/evaluate";
+import { retrieval } from "./commands/retrieve.js";
+import { context as contextCommand } from "./commands/context.js";
+import { evaluate as evaluateCommand } from "./commands/evaluate.js";
 
 const program = new Command();
 

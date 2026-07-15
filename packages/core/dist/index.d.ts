@@ -3,6 +3,8 @@ import * as _eip_analyzer from '@eip/analyzer';
 import { Entity, ClassifiedEntity } from '@eip/analyzer';
 export { ClassifiedEntity, Entity } from '@eip/analyzer';
 import { Result } from '@eip/shared';
+import * as _eip_gemini from '@eip/gemini';
+export { complete } from '@eip/gemini';
 
 declare class Timer {
     private readonly start;
@@ -194,17 +196,25 @@ declare function analyzeRisk(model: RepositoryModel, target: string): RiskResult
 
 declare function printRisk(result: RiskResult): void;
 
-interface RetrievalResult {
-    id: string;
+type ConfidenceLevel = "HIGH" | "MEDIUM" | "LOW";
+interface ConfidenceResult {
+    level: ConfidenceLevel;
     score: number;
-    reasons: string[];
+    reason: string;
+    suggestions: string[];
 }
 
 declare function retrieve(model: RepositoryModel, query: string): {
     query: string;
     tokens: string[];
-    ranked: RetrievalResult[];
+    ranked: {
+        path: string;
+        id: string;
+        score: number;
+        reasons: string[];
+    }[];
     expanded: Set<string>;
+    confidence: ConfidenceResult;
 };
 
 interface RetrievalTrace {
@@ -215,25 +225,54 @@ interface RetrievalTrace {
     expandedCount: number;
 }
 
-interface RankedContext {
-    id: string;
-    score: number;
-    reasons: string[];
-}
-
-declare function buildContext(model: RepositoryModel, query: string): {
-    retrieval: {
-        query: string;
-        tokens: string[];
-        ranked: RetrievalResult[];
-        expanded: Set<string>;
-    };
-    budget: RankedContext[];
+type ContextBuildResult = {
+    success: true;
+    retrieval: ReturnType<typeof retrieve>;
+    confidence: ReturnType<typeof retrieve>["confidence"];
+    budget: Array<{
+        id: string;
+        path: string;
+        score: number;
+        reasons: string[];
+    }>;
     prompt: string;
+} | {
+    success: false;
+    confidence: ReturnType<typeof retrieve>["confidence"];
+    message: string;
 };
+declare function generate(model: RepositoryModel, query: string): Promise<{
+    context: {
+        success: false;
+        confidence: ReturnType<typeof retrieve>["confidence"];
+        message: string;
+    };
+    answer: string;
+    generation: undefined;
+} | {
+    context: {
+        success: true;
+        retrieval: ReturnType<typeof retrieve>;
+        confidence: ReturnType<typeof retrieve>["confidence"];
+        budget: Array<{
+            id: string;
+            path: string;
+            score: number;
+            reasons: string[];
+        }>;
+        prompt: string;
+    };
+    answer: string;
+    generation: _eip_gemini.GenerationResult;
+}>;
+declare function buildContext(model: RepositoryModel, query: string): Promise<ContextBuildResult>;
 
-interface AIProvider {
-    complete(prompt: string): Promise<string>;
+interface GenerationResult {
+    provider: string;
+    model: string;
+    promptTokens?: number;
+    completionTokens?: number;
+    text: string;
 }
 
 interface Metrics {
@@ -242,8 +281,18 @@ interface Metrics {
     f1: number;
 }
 
-declare function evaluateCommit(model: RepositoryModel, message: string, actualFiles: string[]): Metrics;
+declare function evaluateCommit(model: RepositoryModel, message: string, actualFiles: string[], repoRoot?: string): Metrics;
 
 declare function printReport(results: Metrics[]): void;
 
-export { type AIProvider, type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, evaluateCommit, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printReport, printRisk, retrieve, searchRepository, setCachedModel };
+interface Commit {
+    hash: string;
+    message: string;
+}
+declare function getCommitHistory(repo: string, limit?: number): Commit[];
+
+declare function getChangedFiles(repo: string, hash: string): string[];
+
+declare function shouldEvaluate(message: string, files: string[]): boolean;
+
+export { type BuildMetrics, type Commit, type DependencySummary, type ExplainComponentResult, type GenerationResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, evaluateCommit, explain, explainComponent, findComponent, findSymbol, generate, getCachedModel, getChangedFiles, getCommitHistory, impactedFiles, inferResponsibility, listComponents, printExplain, printReport, printRisk, retrieve, searchRepository, setCachedModel, shouldEvaluate };

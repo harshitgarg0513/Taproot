@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { retrieve } from "../src/retrieval/retrieve.js";
+import { retrieve } from "../src/retrieval/retrieve";
 import type { RepositoryModel } from "../src/types.js";
 
 const model: RepositoryModel = {
@@ -17,9 +17,27 @@ const model: RepositoryModel = {
   components: [],
   symbols: [],
   entities: [
-    { id: "service-1", name: "RefreshTokenService", type: "service" },
-    { id: "repo-1", name: "TokenRepository", type: "repository" },
-    { id: "service-2", name: "AuthService", type: "service" },
+    {
+      id: "service-1",
+      kind: "Class",
+      name: "RefreshTokenService",
+      file: "src/auth.ts",
+      line: 1,
+    },
+    {
+      id: "repo-1",
+      kind: "Class",
+      name: "TokenRepository",
+      file: "src/repository.ts",
+      line: 2,
+    },
+    {
+      id: "service-2",
+      kind: "Class",
+      name: "AuthService",
+      file: "src/auth.ts",
+      line: 3,
+    },
   ] as RepositoryModel["entities"],
   classified: [],
   relationships: [],

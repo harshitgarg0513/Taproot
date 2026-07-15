@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@eip/analyzer": "workspace:*",
+    "@eip/anthropic": "workspace:*",
     "@eip/config": "workspace:*",
     "@eip/core": "workspace:*",
     "@eip/observer": "workspace:*",

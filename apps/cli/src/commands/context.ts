@@ -40,5 +40,5 @@ export async function context(repo: string, query: string) {
   console.log(contextPackage.context.prompt);
   console.log();
   console.log("Answer");
-  console.log(contextPackage.answer);
+  console.log(contextPackage.generation?.text ?? contextPackage.answer);
 }

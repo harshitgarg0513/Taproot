@@ -27,14 +27,16 @@ export async function generate(model: RepositoryModel, query: string) {
     return {
       context,
       answer: "",
+      generation: undefined,
     };
   }
 
-  const answer = await complete(context.prompt);
+  const generation = await complete(context.prompt);
 
   return {
     context,
-    answer,
+    answer: generation.text,
+    generation,
   };
 }
 

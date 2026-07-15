@@ -1,4 +1,5 @@
 // src/builder.ts
+import path3 from "path";
 import { analyzeRepository } from "@eip/analyzer";
 import { loadConfig } from "@eip/config";
 import { observeRepository } from "@eip/observer";
@@ -184,11 +185,33 @@ async function buildRepositoryModel(repo) {
     }
   });
   const graphMs = graphTimer.end();
-  const components = analysis.components;
-  const symbols = analysis.symbols;
-  const componentIndex = new Map(
-    components.map((component) => [component.id, component])
-  );
+  const normalizePath2 = (filePath) => {
+    const absoluteRoot = path3.resolve(repo);
+    const normalized = filePath.replace(/\\/g, "/");
+    const absoluteRootNormalized = absoluteRoot.replace(/\\/g, "/");
+    if (normalized.startsWith(absoluteRootNormalized)) {
+      return path3.relative(absoluteRoot, normalized).replace(/\\/g, "/");
+    }
+    return normalized.replace(/^\.\//, "");
+  };
+  const components = analysis.components.map((component) => ({
+    ...component,
+    file: normalizePath2(component.file)
+  }));
+  const symbols = analysis.symbols.map((symbol) => ({
+    ...symbol,
+    file: normalizePath2(symbol.file)
+  }));
+  const entities = analysis.entities.map((entity) => ({
+    ...entity,
+    file: normalizePath2(entity.file)
+  }));
+  const relationships = analysis.relationships;
+  const callGraph = analysis.callGraph.map((call) => ({
+    ...call,
+    file: normalizePath2(call.file)
+  }));
+  const componentIndex = new Map(components.map((component) => [component.id, component]));
   const symbolIndex = new Map(symbols.map((symbol) => [symbol.id, symbol]));
   const model = {
     config,
@@ -202,10 +225,10 @@ async function buildRepositoryModel(repo) {
     symbolIndex,
     components,
     symbols,
-    entities: analysis.entities,
+    entities,
     classified: analysis.classified,
-    relationships: analysis.relationships,
-    callGraph: analysis.callGraph,
+    relationships,
+    callGraph,
     knowledgeGraph: graph
   };
   setCachedModel(key, model);
@@ -565,6 +588,7 @@ function score(candidateScores) {
   for (const [id, score2] of candidateScores) {
     results.push({
       id,
+      path: id,
       score: score2,
       reasons: ["matched repository vocabulary"]
     });
@@ -593,18 +617,70 @@ function expand(model, seedIds) {
   return visited;
 }
 
+// src/retrieval/confidence.ts
+function computeConfidence(matchedTokens, queryTokens, seedCount) {
+  const tokenRatio = queryTokens === 0 ? 0 : matchedTokens / queryTokens;
+  const seedFactor = Math.min(seedCount, 10) / 10;
+  const score2 = Math.max(tokenRatio * 0.7 + seedFactor * 0.3, tokenRatio * 0.5 + 0.2);
+  if (score2 >= 0.8) {
+    return {
+      level: "HIGH",
+      score: score2,
+      reason: "Repository vocabulary matched strongly.",
+      suggestions: []
+    };
+  }
+  if (score2 >= 0.4) {
+    return {
+      level: "MEDIUM",
+      score: score2,
+      reason: "Partial repository vocabulary matched.",
+      suggestions: []
+    };
+  }
+  return {
+    level: "LOW",
+    score: score2,
+    reason: "Very little repository vocabulary matched.",
+    suggestions: [
+      "Try different engineering terminology.",
+      "Search by component name.",
+      "Search by symbol name."
+    ]
+  };
+}
+
 // src/retrieval/retrieve.ts
+function resolvePath(model, id) {
+  const component = model.componentIndex.get(id) ?? model.components.find((candidate) => candidate.id === id);
+  if (component?.file) {
+    return component.file;
+  }
+  const symbol = model.symbolIndex.get(id) ?? model.symbols.find((candidate) => candidate.id === id);
+  if (symbol?.file) {
+    return symbol.file;
+  }
+  const entity = model.entities.find((candidate) => candidate.id === id);
+  return entity?.file ?? id;
+}
 function retrieve(model, query) {
   const vocabulary = buildVocabulary(model);
   const candidateScores = generateCandidates(query, vocabulary);
-  const ranked = score(candidateScores);
+  const ranked = score(candidateScores).map((result) => ({
+    ...result,
+    path: resolvePath(model, result.id)
+  }));
   const seeds = new Set(ranked.slice(0, 10).map((result) => result.id));
   const expanded = expand(model, seeds);
+  const tokens = tokenize(query);
+  const matchedTokenCount = ranked.filter((result) => result.score > 0).length;
+  const confidence = computeConfidence(matchedTokenCount, tokens.length, seeds.size);
   return {
     query,
-    tokens: tokenize(query),
+    tokens,
     ranked,
-    expanded
+    expanded,
+    confidence
   };
 }
 
@@ -621,9 +697,11 @@ function rankContext(model, expanded) {
     reasons.push(`graph-degree:${degree}`);
     const component = model.componentIndex.get(id) ?? model.components.find((candidate) => candidate.id === id);
     const symbol = model.symbolIndex.get(id) ?? model.symbols.find((candidate) => candidate.id === id);
+    const path5 = component?.file ?? symbol?.file ?? id;
     const displayId = component?.name ?? symbol?.name ?? id;
     ranked.push({
       id: displayId,
+      path: path5,
       score: score2,
       reasons
     });
@@ -649,42 +727,116 @@ function applyBudget(items, maxItems = 20) {
   return items.slice(0, maxItems);
 }
 
-// src/context/prompt.ts
-function buildPrompt(query, context) {
-  let prompt = `Engineering Task
+// src/context/snippet.ts
+import fs3 from "fs/promises";
+async function loadSnippet(file, maxLines = 150) {
+  const text = await fs3.readFile(file, "utf8");
+  const lines = text.split("\n");
+  return {
+    file,
+    content: lines.slice(0, maxLines).join("\n"),
+    lines: lines.length
+  };
+}
+
+// src/context/formatter.ts
+function formatPrompt(query, snippets) {
+  let prompt = `You are an experienced software engineer.
+
+Task
 
 ${query}
 
-Relevant Repository Context
+Repository Context
 `;
-  for (const item of context) {
+  for (const snippet of snippets) {
     prompt += `
-${item.id}`;
+================================
+
+FILE
+
+${snippet.file}
+
+--------------------------------
+
+${snippet.content}
+`;
   }
+  prompt += `
+================================
+
+Instructions
+
+1. Only modify files shown above.
+
+2. Explain every change.
+
+3. If context is insufficient, explicitly say so.
+`;
   return prompt;
 }
 
+// src/context/prompt.ts
+async function buildPrompt(query, files) {
+  const snippets = [];
+  for (const file of files) {
+    try {
+      snippets.push(await loadSnippet(file));
+    } catch (error) {
+      void error;
+    }
+  }
+  return formatPrompt(query, snippets);
+}
+
+// src/context/provider.ts
+import { complete } from "@eip/gemini";
+
 // src/context/context.ts
-function buildContext(model, query) {
+async function generate(model, query) {
+  const context = await buildContext(model, query);
+  if (!context.success) {
+    return {
+      context,
+      answer: "",
+      generation: void 0
+    };
+  }
+  const generation = await complete(context.prompt);
+  return {
+    context,
+    answer: generation.text,
+    generation
+  };
+}
+async function buildContext(model, query) {
   const retrieval = retrieve(model, query);
-  const fallbackIds = [
-    ...model.components.slice(0, 8).map((component) => component.id),
-    ...model.symbols.slice(0, 8).map((symbol) => symbol.id),
-    ...model.entities.slice(0, 8).map((entity) => entity.id)
-  ];
-  const seedIds = retrieval.expanded.size > 0 ? retrieval.expanded : new Set(
-    fallbackIds.length > 0 ? fallbackIds : query.toLowerCase().replace(/[^a-z0-9]+/g, " ").split(/\s+/).filter(Boolean).slice(0, 8)
-  );
+  if (retrieval.confidence.level === "LOW") {
+    return {
+      success: false,
+      confidence: retrieval.confidence,
+      message: "Unable to identify reliable repository context."
+    };
+  }
+  const seedIds = retrieval.expanded.size > 0 ? retrieval.expanded : /* @__PURE__ */ new Set();
   const ranked = rankContext(model, seedIds);
   const optimized = optimize(ranked);
   const budget = applyBudget(optimized);
-  const prompt = buildPrompt(query, budget);
+  const prompt = await buildPrompt(
+    query,
+    budget.map((item) => item.path)
+  );
   return {
+    success: true,
     retrieval,
+    confidence: retrieval.confidence,
     budget,
     prompt
   };
 }
+
+// src/evaluation/evaluator.ts
+import path4 from "path";
 
 // src/evaluation/metrics.ts
 function calculate(predicted, actual) {
@@ -700,25 +852,83 @@ function calculate(predicted, actual) {
 }
 
 // src/evaluation/evaluator.ts
-function evaluateCommit(model, message, actualFiles) {
+function normalizePath(filePath, repoRoot) {
+  const absoluteRepoRoot = path4.resolve(repoRoot);
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  if (normalizedPath.startsWith(absoluteRepoRoot.replace(/\\/g, "/"))) {
+    return path4.relative(absoluteRepoRoot, normalizedPath).replace(/\\/g, "/");
+  }
+  return normalizedPath.replace(/^\.\//, "");
+}
+function evaluateCommit(model, message, actualFiles, repoRoot = ".") {
   const retrieval = retrieve(model, message);
-  const predicted = new Set(retrieval.ranked.map((result) => result.id));
-  return calculate(predicted, new Set(actualFiles));
+  const predicted = new Set(
+    retrieval.ranked.map((result) => normalizePath(result.path, repoRoot))
+  );
+  const actual = new Set(actualFiles.map((file) => normalizePath(file, repoRoot)));
+  return calculate(predicted, actual);
 }
 
 // src/evaluation/report.ts
+function formatMetric(value) {
+  return value.toFixed(2);
+}
 function printReport(results) {
-  const avg = (key) => results.reduce((sum, item) => sum + item[key], 0) / results.length;
+  const avg = (key) => {
+    if (results.length === 0) {
+      return 0;
+    }
+    return results.reduce((sum, item) => sum + item[key], 0) / results.length;
+  };
   console.log();
   console.log("================================");
   console.log("Evaluation");
   console.log("================================");
   console.log();
-  console.table({
-    Precision: avg("precision"),
-    Recall: avg("recall"),
-    F1: avg("f1")
+  console.log("Commits Evaluated");
+  console.log(results.length);
+  console.log();
+  console.log("Precision");
+  console.log(formatMetric(avg("precision")));
+  console.log();
+  console.log("Recall");
+  console.log(formatMetric(avg("recall")));
+  console.log();
+  console.log("F1");
+  console.log(formatMetric(avg("f1")));
+}
+
+// src/evaluation/history.ts
+import { execSync } from "child_process";
+function getCommitHistory(repo, limit = 30) {
+  const output = execSync(`git -C "${repo}" log --pretty=format:%H:::%s -n ${limit}`).toString();
+  return output.split("\n").filter(Boolean).map((line) => {
+    const [hash, message] = line.split(":::");
+    return {
+      hash: hash ?? "",
+      message: message ?? ""
+    };
   });
+}
+
+// src/evaluation/files.ts
+import { execSync as execSync2 } from "child_process";
+function getChangedFiles(repo, hash) {
+  const output = execSync2(`git -C "${repo}" show --pretty='' --name-only ${hash}`).toString();
+  return output.split("\n").filter(Boolean);
+}
+
+// src/evaluation/commitFilter.ts
+function shouldEvaluate(message, files) {
+  const msg = message.toLowerCase();
+  if (msg.startsWith("merge")) return false;
+  if (msg.includes("format")) return false;
+  if (msg.includes("lint")) return false;
+  if (msg.includes("dependency")) return false;
+  if (msg.includes("package")) return false;
+  if (files.length > 20) return false;
+  if (files.length === 0) return false;
+  return true;
 }
 export {
   Timer,
@@ -731,6 +941,7 @@ export {
   buildRepositoryModel,
   cacheSize,
   clearCache,
+  complete,
   createCacheKey,
   dependenciesOf,
   dependentsOf,
@@ -739,7 +950,10 @@ export {
   explainComponent,
   findComponent,
   findSymbol,
+  generate,
   getCachedModel,
+  getChangedFiles,
+  getCommitHistory,
   impactedFiles,
   inferResponsibility,
   listComponents,
@@ -748,5 +962,6 @@ export {
   printRisk,
   retrieve,
   searchRepository,
-  setCachedModel
+  setCachedModel,
+  shouldEvaluate
 };
