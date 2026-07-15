@@ -8,6 +8,7 @@
     "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
+    "@eip/anthropic": "workspace:*",
     "@eip/analyzer": "workspace:*",
     "@eip/config": "workspace:*",
     "@eip/observer": "workspace:*",

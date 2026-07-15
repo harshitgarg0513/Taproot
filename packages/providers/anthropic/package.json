@@ -1,0 +1,10 @@
+{
+  "name": "@eip/anthropic",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./index.ts",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "dotenv": "^16.4.7"
+  }
+}

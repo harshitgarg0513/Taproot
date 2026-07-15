@@ -1,14 +1,14 @@
-import { buildRepositoryModel, buildContext } from "@eip/core";
+import { buildRepositoryModel, generate } from "@eip/core";
 
 export async function context(repo: string, query: string) {
-  const result = await buildRepositoryModel(repo);
+  const repoResult = await buildRepositoryModel(repo);
 
-  if (!result.success) {
-    console.error(result.error);
+  if (!repoResult.success) {
+    console.error(repoResult.error);
     return;
   }
 
-  const contextPackage = buildContext(result.data, query);
+  const contextPackage = await generate(repoResult.data, query);
 
   console.log();
   console.log("================================");
@@ -16,8 +16,11 @@ export async function context(repo: string, query: string) {
   console.log("================================");
   console.log();
   console.log("Selected Files");
-  console.table(contextPackage.budget);
+  console.table(contextPackage.context.budget);
   console.log();
   console.log("Prompt");
-  console.log(contextPackage.prompt);
+  console.log(contextPackage.context.prompt);
+  console.log();
+  console.log("Answer");
+  console.log(contextPackage.answer);
 }

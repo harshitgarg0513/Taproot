@@ -1,3 +1,1 @@
-export interface AIProvider {
-  complete(prompt: string): Promise<string>;
-}
+export { complete } from "@eip/anthropic";

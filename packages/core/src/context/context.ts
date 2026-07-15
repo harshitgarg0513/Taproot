@@ -3,7 +3,18 @@ import { rankContext } from "./ranker.js";
 import { optimize } from "./optimizer.js";
 import { applyBudget } from "./budget.js";
 import { buildPrompt } from "./prompt.js";
+import { complete } from "./provider.js";
 import type { RepositoryModel } from "../types.js";
+
+export async function generate(model: RepositoryModel, query: string) {
+  const context = buildContext(model, query);
+  const answer = await complete(context.prompt);
+
+  return {
+    context,
+    answer,
+  };
+}
 
 export function buildContext(model: RepositoryModel, query: string) {
   const retrieval = retrieve(model, query);
