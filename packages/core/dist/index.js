@@ -607,10 +607,89 @@ function retrieve(model, query) {
     expanded
   };
 }
+
+// src/context/ranker.ts
+function rankContext(model, expanded) {
+  const ranked = [];
+  for (const id of expanded) {
+    let score2 = 0;
+    const reasons = [];
+    const degree = model.knowledgeGraph.edges.filter(
+      (edge) => edge.from === id || edge.to === id
+    ).length;
+    score2 += degree;
+    reasons.push(`graph-degree:${degree}`);
+    const component = model.componentIndex.get(id) ?? model.components.find((candidate) => candidate.id === id);
+    const symbol = model.symbolIndex.get(id) ?? model.symbols.find((candidate) => candidate.id === id);
+    const displayId = component?.name ?? symbol?.name ?? id;
+    ranked.push({
+      id: displayId,
+      score: score2,
+      reasons
+    });
+  }
+  ranked.sort((a, b) => b.score - a.score);
+  return ranked;
+}
+
+// src/context/optimizer.ts
+function optimize(ranked) {
+  const seen = /* @__PURE__ */ new Set();
+  return ranked.filter((item) => {
+    if (seen.has(item.id)) {
+      return false;
+    }
+    seen.add(item.id);
+    return true;
+  });
+}
+
+// src/context/budget.ts
+function applyBudget(items, maxItems = 20) {
+  return items.slice(0, maxItems);
+}
+
+// src/context/prompt.ts
+function buildPrompt(query, context) {
+  let prompt = `Engineering Task
+
+${query}
+
+Relevant Repository Context
+`;
+  for (const item of context) {
+    prompt += `
+${item.id}`;
+  }
+  return prompt;
+}
+
+// src/context/context.ts
+function buildContext(model, query) {
+  const retrieval = retrieve(model, query);
+  const fallbackIds = [
+    ...model.components.slice(0, 8).map((component) => component.id),
+    ...model.symbols.slice(0, 8).map((symbol) => symbol.id),
+    ...model.entities.slice(0, 8).map((entity) => entity.id)
+  ];
+  const seedIds = retrieval.expanded.size > 0 ? retrieval.expanded : new Set(
+    fallbackIds.length > 0 ? fallbackIds : query.toLowerCase().replace(/[^a-z0-9]+/g, " ").split(/\s+/).filter(Boolean).slice(0, 8)
+  );
+  const ranked = rankContext(model, seedIds);
+  const optimized = optimize(ranked);
+  const budget = applyBudget(optimized);
+  const prompt = buildPrompt(query, budget);
+  return {
+    retrieval,
+    budget,
+    prompt
+  };
+}
 export {
   Timer,
   analyzeImpact,
   analyzeRisk,
+  buildContext,
   buildDependencySummary,
   buildKnowledge,
   buildKnowledgeGraph,

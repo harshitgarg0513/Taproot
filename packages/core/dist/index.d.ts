@@ -215,4 +215,25 @@ interface RetrievalTrace {
     expandedCount: number;
 }
 
-export { type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, retrieve, searchRepository, setCachedModel };
+interface RankedContext {
+    id: string;
+    score: number;
+    reasons: string[];
+}
+
+declare function buildContext(model: RepositoryModel, query: string): {
+    retrieval: {
+        query: string;
+        tokens: string[];
+        ranked: RetrievalResult[];
+        expanded: Set<string>;
+    };
+    budget: RankedContext[];
+    prompt: string;
+};
+
+interface AIProvider {
+    complete(prompt: string): Promise<string>;
+}
+
+export { type AIProvider, type BuildMetrics, type DependencySummary, type ExplainComponentResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, explain, explainComponent, findComponent, findSymbol, getCachedModel, impactedFiles, inferResponsibility, listComponents, printExplain, printRisk, retrieve, searchRepository, setCachedModel };

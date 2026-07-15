@@ -18,6 +18,7 @@ import { entities } from "./commands/entities.js";
 import { explainCommand } from "./commands/explain.js";
 import { risk } from "./commands/risk.js";
 import { retrieval } from "./commands/retrieve";
+import { context as contextCommand } from "./commands/context";
 
 const program = new Command();
 
@@ -143,6 +144,14 @@ program
   .argument("<query>")
   .action((repo: string, query: string) => {
     void retrieval(repo, query);
+  });
+
+program
+  .command("context")
+  .argument("<repo>")
+  .argument("<query>")
+  .action((repo: string, query: string) => {
+    void contextCommand(repo, query);
   });
 
 program.parse();

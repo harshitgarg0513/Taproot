@@ -388,6 +388,27 @@ async function retrieval(repo, query2) {
   console.log("Expanded Nodes", retrievalResult.expanded.size);
 }
 
+// src/commands/context.ts
+import { buildRepositoryModel as buildRepositoryModel11, buildContext } from "@eip/core";
+async function context(repo, query2) {
+  const result = await buildRepositoryModel11(repo);
+  if (!result.success) {
+    console.error(result.error);
+    return;
+  }
+  const contextPackage = buildContext(result.data, query2);
+  console.log();
+  console.log("================================");
+  console.log("Context Package");
+  console.log("================================");
+  console.log();
+  console.log("Selected Files");
+  console.table(contextPackage.budget);
+  console.log();
+  console.log("Prompt");
+  console.log(contextPackage.prompt);
+}
+
 // src/index.ts
 var program = new Command();
 program.name("eip");
@@ -440,5 +461,8 @@ program.command("risk").argument("<repo>").argument("<target>").action((repo, ta
 });
 program.command("retrieve").argument("<repo>").argument("<query>").action((repo, query2) => {
   void retrieval(repo, query2);
+});
+program.command("context").argument("<repo>").argument("<query>").action((repo, query2) => {
+  void context(repo, query2);
 });
 program.parse();
