@@ -2,13 +2,13 @@
 > @eip/core@0.0.1 build /Users/harshitgarg/Documents/pro/sclare/packages/core
 > tsup src/index.ts --format esm --dts
 
-CLI Building entry: src/index.ts
-CLI Using tsconfig: tsconfig.json
-CLI tsup v8.5.1
-CLI Target: es2022
-ESM Build start
-ESM dist/index.js 31.15 KB
-ESM ⚡️ Build success in 21ms
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Target: es2022
+[34mESM[39m Build start
+[32mESM[39m [1mdist/index.js [22m[32m31.16 KB[39m
+[32mESM[39m ⚡️ Build success in 23ms
 DTS Build start
-DTS ⚡️ Build success in 1028ms
+DTS ⚡️ Build success in 997ms
 DTS dist/index.d.ts 9.11 KB

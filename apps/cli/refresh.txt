@@ -1,0 +1,692 @@
+================================
+Confidence
+HIGH
+100%
+Repository vocabulary matched strongly.
+================================
+You are a senior backend engineer.
+
+Task
+
+implement refresh token rotation
+
+Repository Context
+
+================================
+
+File
+
+apps/microservice/src/core/team/entities/user.entity.ts
+
+Relevant snippet
+
+```ts
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Route } from '../../route/entities/route.entity';
+import { Company } from '../../company/entities/company.entity';
+
+@Entity('user')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number; // Auto-incrementing primary key
+
+  @Column({ length: 50 })
+  empRoleID: string;
+
+  @Column({ length: 100 })
+  name: string;
+
+  @Column({ length: 200 })
+  avatar: string;
+
+  @Column({ length: 100, nullable: true, unique: true })
+  email: string;
+
+  @Column({ type: 'tinyint', default: 0, nullable: true })
+  verified_email_status: boolean;
+
+  @Column({ length: 255 })
+  password: string;
+
+  @Column({ length: 255, nullable: true })
+  password_hash: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  password_reset_date: Date;
+
+  @Column({ length: 255, nullable: true })
+  password_salt: string;
+
+  @Column({ length: 32, nullable: true })
+  password_reset_token: string;
+
+  @Column({ length: 13, nullable: true })
+  mobile: string;
+
+  @Column({ length: 3 })
+  role: string;
+
+  @Column({ nullable: true })
+  designation: number;
+
+  @Column({ nullable: true })
+  reportsTo: number;
+
+  @Column()
+  company: number;
+
+  @Column({ nullable: true })
+  battery: number;
+
+  @Column({ length: 32, nullable: true })
+  os_version: string;
+
+  @Column({ type: 'date', nullable: true })
+  company_doj: Date;
+
+  @Column({ type: 'date', nullable: true })
+  company_dol: Date;
+
+  @Column({ length: 16, nullable: true })
+  tracker_token: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastLogin: Date;
+
+  @Column({ type: 'tinyint', default: 0 })
+  is_available: boolean;
+
+  @Column({ length: 45, nullable: true })
+  play_service_version: string;
+
+  @Column({ default: 0 })
+  deactiveStatus: number;
+
+  @Column({ nullable: true })
+  distributor: number;
+
+  @Column({ nullable: true })
+  retailer: number;
+
+  @Column({ nullable: true })
+```
+
+================================
+
+File
+
+apps/microservice/src/guards/auth.guard.ts
+
+Relevant snippet
+
+```ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UnAuthorizedException } from '../exceptions/unauthorized.exception';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const call = context.switchToRpc().getContext();
+    const metadata = call.internalRepr;
+    const jwtAuthorization = metadata.get('authorization');
+    const jwtToken = jwtAuthorization ? jwtAuthorization[0] : null;
+
+    if (!this.shouldSkipAuthorization(context)) {
+      try {
+        const decodedToken = this.jwtService.verify(jwtToken);
+        call.identity = decodedToken;
+      } catch (e) {
+        call.identity = null;
+        throw new UnAuthorizedException('Unauthorized');
+      }
+    }
+
+    return true;
+  }
+
+  private shouldSkipAuthorization(context: ExecutionContext): boolean {
+    const ctx = context.switchToRpc();
+
+    const path = ctx['args'][2]?.['path'];
+
+    const publicEndpoints = ['/beatroute.dms.HealthService/CheckHealth'];
+    return publicEndpoints.includes(path);
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/middlewares/request/request.middleware.ts
+
+Relevant snippet
+
+```ts
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { AuthGrpcClientService } from '../../grpc-client/auth/auth-grpc-client.service';
+import { AuthenticateResponseDto } from 'proto/beatroute/auth/auth';
+
+@Injectable()
+export class RequestMiddleware implements NestMiddleware {
+  constructor(private readonly authGrpcClientService: AuthGrpcClientService){
+
+  }
+  async use(req: any, res: any, next: () => void) {
+    const authHeader =
+      req.headers['authorization'] || req.headers['Authorization'];
+    const token = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : authHeader?.trim();
+
+    if(token) {
+      const authenticateResponse: AuthenticateResponseDto = await (this.authGrpcClientService.authenticate(token).toPromise());
+  
+      req['jwtToken'] = authenticateResponse.jwtToken;
+    }
+    next();
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `Bearer ${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/auth/auth-grpc-client.service.ts
+
+Relevant snippet
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+
+import { Observable } from 'rxjs';
+import { AUTH_SERVICE_NAME, AuthenticateRequestDto, AuthenticateResponseDto, AuthServiceClient } from 'proto/beatroute/auth/auth';
+import { Auth } from 'typeorm';
+
+@Injectable()
+export class AuthGrpcClientService {
+  private authClientService: AuthServiceClient;
+
+  constructor(@Inject(AUTH_SERVICE_NAME) private client: ClientGrpc) {
+    this.authClientService =
+      this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+  }
+
+  authenticate(token: string): Observable<AuthenticateResponseDto> {
+    const request: AuthenticateRequestDto = { token };
+    return this.authClientService.authenticate(request);
+  }
+}
+```
+
+================================
+
+Instructions
+
+1. Only modify files shown above.
+
+2. Explain every change.
+
+3. If context is insufficient, explicitly say so.
+
+
+================================
+Context Package
+================================
+
+Selected Files
+┌─────────┬─────────────────────────────────────────────────────────────────────────────┬───────┬───────────────────────────────────────────────────────┐
+│ (index) │ file                                                                        │ score │ reasons                                               │
+├─────────┼─────────────────────────────────────────────────────────────────────────────┼───────┼───────────────────────────────────────────────────────┤
+│ 0       │ 'apps/microservice/src/core/team/entities/user.entity.ts'                   │ 130   │ 'matched vocabulary, matched symbol, graph expansion' │
+│ 1       │ 'apps/microservice/src/guards/auth.guard.ts'                                │ 86    │ 'matched vocabulary, matched symbol, graph expansion' │
+│ 2       │ 'apps/apigateway/src/middlewares/request/request.middleware.ts'             │ 62    │ 'matched vocabulary, matched symbol, graph expansion' │
+│ 3       │ 'apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts'   │ 52    │ 'matched vocabulary, matched symbol, graph expansion' │
+│ 4       │ 'apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts' │ 52    │ 'matched vocabulary, matched symbol, graph expansion' │
+│ 5       │ 'apps/apigateway/src/grpc-client/auth/auth-grpc-client.service.ts'          │ 42    │ 'matched vocabulary, matched symbol, graph expansion' │
+└─────────┴─────────────────────────────────────────────────────────────────────────────┴───────┴───────────────────────────────────────────────────────┘
+
+Prompt
+You are a senior backend engineer.
+
+Task
+
+implement refresh token rotation
+
+Repository Context
+
+================================
+
+File
+
+apps/microservice/src/core/team/entities/user.entity.ts
+
+Relevant snippet
+
+```ts
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Route } from '../../route/entities/route.entity';
+import { Company } from '../../company/entities/company.entity';
+
+@Entity('user')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number; // Auto-incrementing primary key
+
+  @Column({ length: 50 })
+  empRoleID: string;
+
+  @Column({ length: 100 })
+  name: string;
+
+  @Column({ length: 200 })
+  avatar: string;
+
+  @Column({ length: 100, nullable: true, unique: true })
+  email: string;
+
+  @Column({ type: 'tinyint', default: 0, nullable: true })
+  verified_email_status: boolean;
+
+  @Column({ length: 255 })
+  password: string;
+
+  @Column({ length: 255, nullable: true })
+  password_hash: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  password_reset_date: Date;
+
+  @Column({ length: 255, nullable: true })
+  password_salt: string;
+
+  @Column({ length: 32, nullable: true })
+  password_reset_token: string;
+
+  @Column({ length: 13, nullable: true })
+  mobile: string;
+
+  @Column({ length: 3 })
+  role: string;
+
+  @Column({ nullable: true })
+  designation: number;
+
+  @Column({ nullable: true })
+  reportsTo: number;
+
+  @Column()
+  company: number;
+
+  @Column({ nullable: true })
+  battery: number;
+
+  @Column({ length: 32, nullable: true })
+  os_version: string;
+
+  @Column({ type: 'date', nullable: true })
+  company_doj: Date;
+
+  @Column({ type: 'date', nullable: true })
+  company_dol: Date;
+
+  @Column({ length: 16, nullable: true })
+  tracker_token: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastLogin: Date;
+
+  @Column({ type: 'tinyint', default: 0 })
+  is_available: boolean;
+
+  @Column({ length: 45, nullable: true })
+  play_service_version: string;
+
+  @Column({ default: 0 })
+  deactiveStatus: number;
+
+  @Column({ nullable: true })
+  distributor: number;
+
+  @Column({ nullable: true })
+  retailer: number;
+
+  @Column({ nullable: true })
+```
+
+================================
+
+File
+
+apps/microservice/src/guards/auth.guard.ts
+
+Relevant snippet
+
+```ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UnAuthorizedException } from '../exceptions/unauthorized.exception';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const call = context.switchToRpc().getContext();
+    const metadata = call.internalRepr;
+    const jwtAuthorization = metadata.get('authorization');
+    const jwtToken = jwtAuthorization ? jwtAuthorization[0] : null;
+
+    if (!this.shouldSkipAuthorization(context)) {
+      try {
+        const decodedToken = this.jwtService.verify(jwtToken);
+        call.identity = decodedToken;
+      } catch (e) {
+        call.identity = null;
+        throw new UnAuthorizedException('Unauthorized');
+      }
+    }
+
+    return true;
+  }
+
+  private shouldSkipAuthorization(context: ExecutionContext): boolean {
+    const ctx = context.switchToRpc();
+
+    const path = ctx['args'][2]?.['path'];
+
+    const publicEndpoints = ['/beatroute.dms.HealthService/CheckHealth'];
+    return publicEndpoints.includes(path);
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/middlewares/request/request.middleware.ts
+
+Relevant snippet
+
+```ts
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { AuthGrpcClientService } from '../../grpc-client/auth/auth-grpc-client.service';
+import { AuthenticateResponseDto } from 'proto/beatroute/auth/auth';
+
+@Injectable()
+export class RequestMiddleware implements NestMiddleware {
+  constructor(private readonly authGrpcClientService: AuthGrpcClientService){
+
+  }
+  async use(req: any, res: any, next: () => void) {
+    const authHeader =
+      req.headers['authorization'] || req.headers['Authorization'];
+    const token = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : authHeader?.trim();
+
+    if(token) {
+      const authenticateResponse: AuthenticateResponseDto = await (this.authGrpcClientService.authenticate(token).toPromise());
+  
+      req['jwtToken'] = authenticateResponse.jwtToken;
+    }
+    next();
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `Bearer ${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/auth/auth-grpc-client.service.ts
+
+Relevant snippet
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+
+import { Observable } from 'rxjs';
+import { AUTH_SERVICE_NAME, AuthenticateRequestDto, AuthenticateResponseDto, AuthServiceClient } from 'proto/beatroute/auth/auth';
+import { Auth } from 'typeorm';
+
+@Injectable()
+export class AuthGrpcClientService {
+  private authClientService: AuthServiceClient;
+
+  constructor(@Inject(AUTH_SERVICE_NAME) private client: ClientGrpc) {
+    this.authClientService =
+      this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+  }
+
+  authenticate(token: string): Observable<AuthenticateResponseDto> {
+    const request: AuthenticateRequestDto = { token };
+    return this.authClientService.authenticate(request);
+  }
+}
+```
+
+================================
+
+Instructions
+
+1. Only modify files shown above.
+
+2. Explain every change.
+
+3. If context is insufficient, explicitly say so.
+
+
+Prompt Tokens
+1729
+
+Answer
+To implement Refresh Token Rotation, we need to ensure that every time a refresh token is used, it is invalidated and a new pair (Access + Refresh) is issued. If a client attempts to use an already-used or expired refresh token, we must flag this as a potential security breach (token reuse detection).
+
+### 1. Database Schema Update
+We need a way to track the "family" of refresh tokens to detect reuse. 
+
+**File:** `apps/microservice/src/core/team/entities/user.entity.ts`
+Add a column to store a `refresh_token_version` or a specific `refresh_token_hash`. For rotation, tracking the version is standard.
+
+```typescript
+// ... inside User class
+  @Column({ default: 0 })
+  refresh_token_version: number;
+```
+*Change explanation:* We add `refresh_token_version`. When a user logs in, we increment this. When a refresh token is presented, we check if the version in the token matches the DB. If it doesn't match, it means the token was already rotated/compromised.
+
+### 2. Auth Service Logic (Logic Requirements)
+Since I cannot see the `AuthService` implementation, you must update your `authenticate` logic in the microservice:
+
+1.  **Issue Tokens:** When issuing a new token pair, include `sub` (user id) and `version` (the user's `refresh_token_version`).
+2.  **Verify Refresh:**
+    *   Decode the refresh token.
+    *   Find the user in the DB.
+    *   **Check:** `if (decoded.version !== user.refresh_token_version) throw new SecurityException('Token Reused');`
+    *   If valid, increment `user.refresh_token_version` in the DB and return a new token pair.
+
+### 3. Middleware Update (API Gateway)
+The `RequestMiddleware` currently only handles `authenticate`. It needs to be aware of the "Refresh" flow.
+
+**File:** `apps/apigateway/src/middlewares/request/request.middleware.ts`
+
+```typescript
+// Update the logic to allow passing the refresh token if the route is /refresh
+async use(req: any, res: any, next: () => void) {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader?.trim();
+
+  // If path is /refresh, skip standard auth and let the controller handle it
+  if (req.originalUrl.includes('/refresh')) {
+     return next(); 
+  }
+  
+  if (token) {
+    // ... existing authentication logic
+  }
+  next();
+}
+```
+
+### 4. Guard Update
+The `AuthGuard` must handle the expiration of the access token gracefully to trigger the rotation flow on the client side.
+
+**File:** `apps/microservice/src/guards/auth.guard.ts`
+
+```typescript
+// Inside canActivate
+try {
+  const decodedToken = this.jwtService.verify(jwtToken);
+  call.identity = decodedToken;
+} catch (e) {
+  // If token expired, throw a specific code that the client uses to hit the /refresh endpoint
+  if (e.name === 'TokenExpiredError') {
+    throw new UnAuthorizedException('TOKEN_EXPIRED'); 
+  }
+  call.identity = null;
+  throw new UnAuthorizedException('Unauthorized');
+}
+```
+
+### 5. Interceptor Update
+The current `GrpcClientInterceptor` adds the token to metadata. This remains the same as the rotation is handled by the payload content, not the transport mechanism.
+
+### Important Note on Missing Context
+1.  **Refresh Token Table:** To properly implement rotation, it is best practice to have a separate `refresh_tokens` table. Using the `user` entity directly is fine for simple implementations, but it prevents the user from being logged into multiple devices simultaneously.
+2.  **Auth Service:** The implementation of the `AuthServiceClient` (the actual controller/service handling the gRPC calls) was not provided. The logic for incrementing the `refresh_token_version` must be placed in the method that validates the refresh token.
+
+### Security Recommendation
+If you detect `decoded.version !== user.refresh_token_version`, you should **invalidate all active sessions** for that user (set `refresh_token_version` to 0 or a new random value) as this is a high-confidence indicator of a leaked token.

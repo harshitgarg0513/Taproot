@@ -6,7 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 const envPath = resolve(fileURLToPath(new URL("../../../.env", import.meta.url)));
 dotenv.config({ path: envPath });
 
-const fallbackModels = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
+const fallbackModels = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-3.1-flash-lite"];
 
 function getCandidateModels(): string[] {
   const configuredModel = process.env.GEMINI_MODEL?.trim();
@@ -125,7 +125,7 @@ export async function complete(prompt: string): Promise<GenerationResult> {
 
         errors.push(`${model}: ${message}`);
 
-        if (!isUnavailableModelError(error)) {
+        if (!isUnavailableModelError(error) && !isRateLimitError(error)) {
           throw error;
         }
 

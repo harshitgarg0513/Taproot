@@ -1,0 +1,1035 @@
+================================
+Confidence
+HIGH
+100%
+Repository vocabulary matched strongly.
+================================
+You are a senior backend engineer.
+
+Task
+
+grpc retry interceptor
+
+Repository Context
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/grpc-client.module.ts
+
+Relevant snippet
+
+```ts
+import { Module } from '@nestjs/common';
+import { ExampleGrpcClientService } from './example/example-grpc-client.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { GrpcClientInterceptor } from './interceptors/grpc-client-interceptor';
+import { EXAMPLE_SERVICE_NAME } from 'proto/beatroute/dms/example';
+import {
+  BEATROUTE_DMS_PACKAGE_NAME,
+  HEALTH_SERVICE_NAME,
+} from 'proto/beatroute/dms/health';
+import { HealthGrpcClientService } from './health/health-grpc-client.service';
+import { AUTH_SERVICE_NAME, BEATROUTE_AUTH_PACKAGE_NAME } from 'proto/beatroute/auth/auth';
+import { AuthGrpcClientService } from './auth/auth-grpc-client.service';
+
+@Module({
+  imports: [
+    ConfigModule,
+    ClientsModule.registerAsync([
+      {
+        name: AUTH_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_AUTH_MS_URL'),
+            package: BEATROUTE_AUTH_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/auth/auth.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+              interceptors: [
+                (options, nextCall) => {
+                  return grpcClientInterceptor.intercept(options, nextCall);
+                },
+              ],
+            },
+          },
+        }),
+        inject: [ConfigService, GrpcClientInterceptor],
+      },
+      {
+        name: EXAMPLE_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/example.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/grpc-client.module.ts
+
+Relevant snippet
+
+```ts
+import { Module } from '@nestjs/common';
+import { ExampleGrpcClientService } from './example/example-grpc-client.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { GrpcClientInterceptor } from './interceptors/grpc-client-interceptor';
+import { EXAMPLE_SERVICE_NAME } from 'proto/beatroute/dms/example';
+import {
+  BEATROUTE_DMS_PACKAGE_NAME,
+  HEALTH_SERVICE_NAME,
+} from 'proto/beatroute/dms/health';
+import { HealthGrpcClientService } from './health/health-grpc-client.service';
+
+@Module({
+  imports: [
+    ConfigModule,
+    ClientsModule.registerAsync([
+      {
+        name: EXAMPLE_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/example.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+              interceptors: [
+                (options, nextCall) => {
+                  return grpcClientInterceptor.intercept(options, nextCall);
+                },
+              ],
+            },
+          },
+        }),
+        inject: [ConfigService, GrpcClientInterceptor],
+      },
+      {
+        name: HEALTH_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/health.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/example/example-grpc-client.service.ts
+
+Relevant snippet
+
+```ts
+import {
+  ExampleRequestDto,
+  ExampleViewRequestDto,
+  ExampleResponseListDto,
+  Example,
+  ExampleServiceClient,
+  EXAMPLE_SERVICE_NAME,
+} from 'proto/beatroute/dms/example';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class ExampleGrpcClientService {
+  private exampleService: ExampleServiceClient;
+
+  constructor(@Inject(EXAMPLE_SERVICE_NAME) private client: ClientGrpc) {
+    this.exampleService =
+      this.client.getService<ExampleServiceClient>(EXAMPLE_SERVICE_NAME);
+  }
+
+  getExample(id: number): Observable<Example> {
+    const request: ExampleViewRequestDto = { id };
+    return this.exampleService.view(request);
+  }
+
+  getAllExamples(page: number): Observable<ExampleResponseListDto> {
+    return this.exampleService.index({page});
+  }
+
+  createExample(exampleRequestDto: ExampleRequestDto): Observable<Example> {
+    return this.exampleService.create(exampleRequestDto);
+  }
+
+  deleteExample(id: number) {
+    return this.exampleService.delete({ id });
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `Bearer ${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+proto/beatroute/auth/auth.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/auth/auth.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+
+export const protobufPackage = "beatroute.auth";
+
+export interface AuthenticateRequestDto {
+  token: string;
+}
+
+export interface AuthenticateResponseDto {
+  jwtToken: string;
+}
+
+export const BEATROUTE_AUTH_PACKAGE_NAME = "beatroute.auth";
+
+export interface AuthServiceClient {
+  authenticate(request: AuthenticateRequestDto): Observable<AuthenticateResponseDto>;
+}
+
+export interface AuthServiceController {
+  authenticate(
+    request: AuthenticateRequestDto,
+  ): Promise<AuthenticateResponseDto> | Observable<AuthenticateResponseDto> | AuthenticateResponseDto;
+}
+
+export function AuthServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["authenticate"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const AUTH_SERVICE_NAME = "AuthService";
+```
+
+================================
+
+File
+
+proto/beatroute/dms/example.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/dms/example.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+import { Empty } from "../common/empty";
+import { Pagination } from "../common/response";
+
+export const protobufPackage = "beatroute.dms";
+
+export interface ExampleRequestDto {
+  name: string;
+  description: string;
+}
+
+export interface Example {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface ExampleViewRequestDto {
+  id: number;
+}
+
+export interface ExampleDeleteRequestDto {
+  id: number;
+}
+
+export interface ExampleListRequestDto {
+  page?: number | undefined;
+}
+
+export interface ExampleResponseListDto {
+  examples: Example[];
+  pagination: Pagination | undefined;
+}
+
+export const BEATROUTE_DMS_PACKAGE_NAME = "beatroute.dms";
+
+export interface ExampleServiceClient {
+  create(request: ExampleRequestDto): Observable<Example>;
+
+  index(request: ExampleListRequestDto): Observable<ExampleResponseListDto>;
+
+  view(request: ExampleViewRequestDto): Observable<Example>;
+
+  delete(request: ExampleDeleteRequestDto): Observable<Empty>;
+}
+
+export interface ExampleServiceController {
+  create(request: ExampleRequestDto): Promise<Example> | Observable<Example> | Example;
+
+  index(
+    request: ExampleListRequestDto,
+  ): Promise<ExampleResponseListDto> | Observable<ExampleResponseListDto> | ExampleResponseListDto;
+
+  view(request: ExampleViewRequestDto): Promise<Example> | Observable<Example> | Example;
+
+  delete(request: ExampleDeleteRequestDto): Promise<Empty> | Observable<Empty> | Empty;
+}
+
+export function ExampleServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["create", "index", "view", "delete"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ExampleService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ExampleService", method)(constructor.prototype[method], method, descriptor);
+    }
+```
+
+================================
+
+File
+
+proto/beatroute/dms/health.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/dms/health.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+
+export const protobufPackage = "beatroute.dms";
+
+export interface HealthCheckRequest {
+}
+
+export interface HealthCheckResponse {
+  status: boolean;
+}
+
+export const BEATROUTE_DMS_PACKAGE_NAME = "beatroute.dms";
+
+export interface HealthServiceClient {
+  checkHealth(request: HealthCheckRequest): Observable<HealthCheckResponse>;
+}
+
+export interface HealthServiceController {
+  checkHealth(
+    request: HealthCheckRequest,
+  ): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
+}
+
+export function HealthServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["checkHealth"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("HealthService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("HealthService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const HEALTH_SERVICE_NAME = "HealthService";
+```
+
+================================
+
+Instructions
+
+1. Only modify files shown above.
+
+2. Explain every change.
+
+3. If context is insufficient, explicitly say so.
+
+
+================================
+Context Package
+================================
+
+Selected Files
+┌─────────┬─────────────────────────────────────────────────────────────────────────────┬───────┬─────────────────────────────────────────────────────────────────────────┐
+│ (index) │ file                                                                        │ score │ reasons                                                                 │
+├─────────┼─────────────────────────────────────────────────────────────────────────────┼───────┼─────────────────────────────────────────────────────────────────────────┤
+│ 0       │ 'apps/apigateway/src/grpc-client/grpc-client.module.ts'                     │ 318   │ 'matched vocabulary, matched filename, matched symbol, graph expansion' │
+│ 1       │ 'apps/microservice/src/grpc-client/grpc-client.module.ts'                   │ 254   │ 'matched vocabulary, matched filename, matched symbol, graph expansion' │
+│ 2       │ 'apps/apigateway/src/grpc-client/example/example-grpc-client.service.ts'    │ 130   │ 'matched vocabulary, matched filename, matched symbol, graph expansion' │
+│ 3       │ 'apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts'   │ 120   │ 'matched vocabulary, matched filename, matched symbol, graph expansion' │
+│ 4       │ 'apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts' │ 120   │ 'matched vocabulary, matched filename, matched symbol, graph expansion' │
+│ 5       │ 'proto/beatroute/auth/auth.ts'                                              │ 112   │ 'matched vocabulary, matched symbol, graph expansion'                   │
+│ 6       │ 'proto/beatroute/dms/example.ts'                                            │ 112   │ 'matched vocabulary, matched symbol, graph expansion'                   │
+│ 7       │ 'proto/beatroute/dms/health.ts'                                             │ 112   │ 'matched vocabulary, matched symbol, graph expansion'                   │
+└─────────┴─────────────────────────────────────────────────────────────────────────────┴───────┴─────────────────────────────────────────────────────────────────────────┘
+
+Prompt
+You are a senior backend engineer.
+
+Task
+
+grpc retry interceptor
+
+Repository Context
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/grpc-client.module.ts
+
+Relevant snippet
+
+```ts
+import { Module } from '@nestjs/common';
+import { ExampleGrpcClientService } from './example/example-grpc-client.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { GrpcClientInterceptor } from './interceptors/grpc-client-interceptor';
+import { EXAMPLE_SERVICE_NAME } from 'proto/beatroute/dms/example';
+import {
+  BEATROUTE_DMS_PACKAGE_NAME,
+  HEALTH_SERVICE_NAME,
+} from 'proto/beatroute/dms/health';
+import { HealthGrpcClientService } from './health/health-grpc-client.service';
+import { AUTH_SERVICE_NAME, BEATROUTE_AUTH_PACKAGE_NAME } from 'proto/beatroute/auth/auth';
+import { AuthGrpcClientService } from './auth/auth-grpc-client.service';
+
+@Module({
+  imports: [
+    ConfigModule,
+    ClientsModule.registerAsync([
+      {
+        name: AUTH_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_AUTH_MS_URL'),
+            package: BEATROUTE_AUTH_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/auth/auth.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+              interceptors: [
+                (options, nextCall) => {
+                  return grpcClientInterceptor.intercept(options, nextCall);
+                },
+              ],
+            },
+          },
+        }),
+        inject: [ConfigService, GrpcClientInterceptor],
+      },
+      {
+        name: EXAMPLE_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/example.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/grpc-client.module.ts
+
+Relevant snippet
+
+```ts
+import { Module } from '@nestjs/common';
+import { ExampleGrpcClientService } from './example/example-grpc-client.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+import { GrpcClientInterceptor } from './interceptors/grpc-client-interceptor';
+import { EXAMPLE_SERVICE_NAME } from 'proto/beatroute/dms/example';
+import {
+  BEATROUTE_DMS_PACKAGE_NAME,
+  HEALTH_SERVICE_NAME,
+} from 'proto/beatroute/dms/health';
+import { HealthGrpcClientService } from './health/health-grpc-client.service';
+
+@Module({
+  imports: [
+    ConfigModule,
+    ClientsModule.registerAsync([
+      {
+        name: EXAMPLE_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/example.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+              interceptors: [
+                (options, nextCall) => {
+                  return grpcClientInterceptor.intercept(options, nextCall);
+                },
+              ],
+            },
+          },
+        }),
+        inject: [ConfigService, GrpcClientInterceptor],
+      },
+      {
+        name: HEALTH_SERVICE_NAME,
+        imports: [ConfigModule],
+        extraProviders: [GrpcClientInterceptor],
+        useFactory: async (
+          configService: ConfigService,
+          grpcClientInterceptor: GrpcClientInterceptor,
+        ) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: configService.get<string>('GRPC_DMS_MS_URL'),
+            package: BEATROUTE_DMS_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/beatroute/dms/health.proto'),
+            loader: {
+              includeDirs: [join(__dirname, '../')],
+            },
+            channelOptions: {
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/example/example-grpc-client.service.ts
+
+Relevant snippet
+
+```ts
+import {
+  ExampleRequestDto,
+  ExampleViewRequestDto,
+  ExampleResponseListDto,
+  Example,
+  ExampleServiceClient,
+  EXAMPLE_SERVICE_NAME,
+} from 'proto/beatroute/dms/example';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class ExampleGrpcClientService {
+  private exampleService: ExampleServiceClient;
+
+  constructor(@Inject(EXAMPLE_SERVICE_NAME) private client: ClientGrpc) {
+    this.exampleService =
+      this.client.getService<ExampleServiceClient>(EXAMPLE_SERVICE_NAME);
+  }
+
+  getExample(id: number): Observable<Example> {
+    const request: ExampleViewRequestDto = { id };
+    return this.exampleService.view(request);
+  }
+
+  getAllExamples(page: number): Observable<ExampleResponseListDto> {
+    return this.exampleService.index({page});
+  }
+
+  createExample(exampleRequestDto: ExampleRequestDto): Observable<Example> {
+    return this.exampleService.create(exampleRequestDto);
+  }
+
+  deleteExample(id: number) {
+    return this.exampleService.delete({ id });
+  }
+}
+```
+
+================================
+
+File
+
+apps/apigateway/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+apps/microservice/src/grpc-client/interceptors/grpc-client-interceptor.ts
+
+Relevant snippet
+
+```ts
+import { InterceptingCall } from '@grpc/grpc-js';
+import { Inject, Injectable } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+
+@Injectable()
+export class GrpcClientInterceptor {
+  constructor(@Inject(REQUEST) private readonly request: any) {}
+
+  intercept(options, nextCall) {
+    const jwtToken = this.request['jwtToken'];
+    return new InterceptingCall(nextCall(options), {
+      start: (metadata, listener, next) => {
+        metadata.add('authorization', `Bearer ${jwtToken}`);
+        next(metadata, listener);
+      },
+    });
+  }
+}
+```
+
+================================
+
+File
+
+proto/beatroute/auth/auth.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/auth/auth.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+
+export const protobufPackage = "beatroute.auth";
+
+export interface AuthenticateRequestDto {
+  token: string;
+}
+
+export interface AuthenticateResponseDto {
+  jwtToken: string;
+}
+
+export const BEATROUTE_AUTH_PACKAGE_NAME = "beatroute.auth";
+
+export interface AuthServiceClient {
+  authenticate(request: AuthenticateRequestDto): Observable<AuthenticateResponseDto>;
+}
+
+export interface AuthServiceController {
+  authenticate(
+    request: AuthenticateRequestDto,
+  ): Promise<AuthenticateResponseDto> | Observable<AuthenticateResponseDto> | AuthenticateResponseDto;
+}
+
+export function AuthServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["authenticate"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const AUTH_SERVICE_NAME = "AuthService";
+```
+
+================================
+
+File
+
+proto/beatroute/dms/example.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/dms/example.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+import { Empty } from "../common/empty";
+import { Pagination } from "../common/response";
+
+export const protobufPackage = "beatroute.dms";
+
+export interface ExampleRequestDto {
+  name: string;
+  description: string;
+}
+
+export interface Example {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface ExampleViewRequestDto {
+  id: number;
+}
+
+export interface ExampleDeleteRequestDto {
+  id: number;
+}
+
+export interface ExampleListRequestDto {
+  page?: number | undefined;
+}
+
+export interface ExampleResponseListDto {
+  examples: Example[];
+  pagination: Pagination | undefined;
+}
+
+export const BEATROUTE_DMS_PACKAGE_NAME = "beatroute.dms";
+
+export interface ExampleServiceClient {
+  create(request: ExampleRequestDto): Observable<Example>;
+
+  index(request: ExampleListRequestDto): Observable<ExampleResponseListDto>;
+
+  view(request: ExampleViewRequestDto): Observable<Example>;
+
+  delete(request: ExampleDeleteRequestDto): Observable<Empty>;
+}
+
+export interface ExampleServiceController {
+  create(request: ExampleRequestDto): Promise<Example> | Observable<Example> | Example;
+
+  index(
+    request: ExampleListRequestDto,
+  ): Promise<ExampleResponseListDto> | Observable<ExampleResponseListDto> | ExampleResponseListDto;
+
+  view(request: ExampleViewRequestDto): Promise<Example> | Observable<Example> | Example;
+
+  delete(request: ExampleDeleteRequestDto): Promise<Empty> | Observable<Empty> | Empty;
+}
+
+export function ExampleServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["create", "index", "view", "delete"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ExampleService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ExampleService", method)(constructor.prototype[method], method, descriptor);
+    }
+```
+
+================================
+
+File
+
+proto/beatroute/dms/health.ts
+
+Relevant snippet
+
+```ts
+// Code generated by protoc-gen-ts_proto. DO NOT EDIT.
+// versions:
+//   protoc-gen-ts_proto  v2.2.0
+//   protoc               v5.28.2
+// source: proto/beatroute/dms/health.proto
+
+/* eslint-disable */
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+
+export const protobufPackage = "beatroute.dms";
+
+export interface HealthCheckRequest {
+}
+
+export interface HealthCheckResponse {
+  status: boolean;
+}
+
+export const BEATROUTE_DMS_PACKAGE_NAME = "beatroute.dms";
+
+export interface HealthServiceClient {
+  checkHealth(request: HealthCheckRequest): Observable<HealthCheckResponse>;
+}
+
+export interface HealthServiceController {
+  checkHealth(
+    request: HealthCheckRequest,
+  ): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
+}
+
+export function HealthServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["checkHealth"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("HealthService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("HealthService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const HEALTH_SERVICE_NAME = "HealthService";
+```
+
+================================
+
+Instructions
+
+1. Only modify files shown above.
+
+2. Explain every change.
+
+3. If context is insufficient, explicitly say so.
+
+
+Prompt Tokens
+3401
+
+Answer
+To implement a gRPC retry mechanism, we should leverage the `@grpc/grpc-js` library's capability to define a `service_config` with a `retryPolicy`. This is the standard, production-grade way to handle retries in gRPC, as it is offloaded to the gRPC client core rather than being managed manually via custom InterceptingCalls, which are difficult to implement correctly for stateful stream handling.
+
+### Changes Summary
+
+We need to modify the `channelOptions` in your `grpc-client.module.ts` files to include a `service_config`.
+
+#### 1. Modify `apps/apigateway/src/grpc-client/grpc-client.module.ts` (and similarly for `apps/microservice/...`)
+
+```typescript
+// ... inside useFactory
+options: {
+  // ... existing configs
+  channelOptions: {
+    // 1. Add the retry service config
+    'grpc.service_config': JSON.stringify({
+      methodConfig: [
+        {
+          name: [], // Applies to all methods
+          retryPolicy: {
+            maxAttempts: 3,
+            initialBackoff: '0.1s',
+            maxBackoff: '1s',
+            backoffMultiplier: 2,
+            retryableStatusCodes: ['UNAVAILABLE', 'INTERNAL'],
+          },
+        },
+      ],
+    }),
+    // 2. Keep your existing interceptors
+    interceptors: [
+      (options, nextCall) => {
+        return grpcClientInterceptor.intercept(options, nextCall);
+      },
+    ],
+  },
+},
+```
+
+### Explanation of Changes
+
+1.  **`grpc.service_config`**: gRPC clients natively support retry policies defined in the service configuration. By setting this in `channelOptions`, you instruct the gRPC core library to automatically retry failed requests based on your criteria without needing custom logic in your `GrpcClientInterceptor`.
+2.  **`methodConfig`**: 
+    *   `name: []`: An empty list indicates this policy applies to all methods on the channel. You can target specific services or methods (e.g., `[{ "service": "beatroute.dms.ExampleService" }]`) if you prefer granular control.
+    *   `maxAttempts`: Total attempts including the initial call.
+    *   `initialBackoff`/`maxBackoff`: Controls the exponential backoff timing to prevent overwhelming a service that is just coming back online.
+    *   `retryableStatusCodes`: We specifically target `UNAVAILABLE` (common for load balancer transitions or service restarts) and `INTERNAL` (if the service signals a transient internal error). **Note:** Only include idempotent operations (like GET/index/view) if you are worried about side effects on `create` or `delete` requests.
+
+### Important Considerations
+
+*   **Idempotency**: Be cautious. If you retry a `createExample` call that actually reached the server but failed on the response, the server might process the same entity twice. In gRPC, it is highly recommended to implement **idempotency keys** in your protobuf definitions if you enable retries on non-read operations.
+*   **Interceptor Scope**: Your `GrpcClientInterceptor` currently injects the `REQUEST` scope. Be aware that if your gRPC call is long-lived or asynchronous, `REQUEST` scope can lead to memory leaks or context loss. The `service_config` approach above is superior because it handles the retry logic at the C++/Core level, ensuring the metadata (Authorization headers) is correctly re-applied on subsequent retries automatically.
+*   **Context**: The `apps/microservice` module should be updated using the exact same `channelOptions` pattern to maintain consistency across your microservice fleet.
