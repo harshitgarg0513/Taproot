@@ -20,11 +20,19 @@ describe("buildPrompt", () => {
     await mkdir(dir, { recursive: true });
     await writeFile(file, "export const value = 1;\n", "utf8");
 
-    const prompt = await buildPrompt("implement refresh tokens", [file]);
+    const prompt = await buildPrompt(dir, "implement refresh tokens", [
+      {
+        id: "sample.ts",
+        path: "sample.ts",
+        score: 10,
+        reasons: ["matched vocabulary"],
+        ids: [],
+      },
+    ]);
 
     expect(prompt).toContain("Task");
     expect(prompt).toContain("implement refresh tokens");
-    expect(prompt).toContain(file);
+    expect(prompt).toContain("sample.ts");
     expect(prompt).toContain("export const value = 1;");
     expect(prompt).toContain("Instructions");
   });

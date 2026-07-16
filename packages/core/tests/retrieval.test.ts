@@ -49,7 +49,7 @@ describe("retrieve", () => {
     const result = retrieve(model, "implement refresh tokens");
 
     expect(result.tokens).toEqual(["refresh", "tokens"]);
-    expect(result.ranked[0]?.id).toBe("service-1");
+    expect(result.ranked[0]?.path).toBe("src/auth.ts");
     expect(result.expanded.has("service-1")).toBe(true);
     expect(result.expanded.has("repo-1")).toBe(true);
   });

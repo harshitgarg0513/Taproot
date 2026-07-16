@@ -1,1 +1,4 @@
 .env
+.eip-cache.json
+**/.eip-cache.json
+.eval-repos/

@@ -1,7 +1,7 @@
 import type { CodeSnippet } from "./snippet.js";
 
 export function formatPrompt(query: string, snippets: CodeSnippet[]) {
-  let prompt = `You are an experienced software engineer.
+  let prompt = `You are a senior backend engineer.
 
 Task
 
@@ -14,13 +14,15 @@ Repository Context
     prompt += `
 ================================
 
-FILE
+File
 
 ${snippet.file}
 
---------------------------------
+Relevant snippet
 
+\`\`\`ts
 ${snippet.content}
+\`\`\`
 `;
   }
 

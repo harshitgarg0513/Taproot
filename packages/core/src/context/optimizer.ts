@@ -1,14 +1,15 @@
 import type { RankedContext } from "./ranker.js";
 
 export function optimize(ranked: RankedContext[]) {
-  const seen = new Set<string>();
+  const byPath = new Map<string, RankedContext>();
 
-  return ranked.filter((item) => {
-    if (seen.has(item.id)) {
-      return false;
+  for (const item of ranked) {
+    const previous = byPath.get(item.path);
+
+    if (!previous || item.score > previous.score) {
+      byPath.set(item.path, item);
     }
+  }
 
-    seen.add(item.id);
-    return true;
-  });
+  return Array.from(byPath.values()).sort((a, b) => b.score - a.score);
 }

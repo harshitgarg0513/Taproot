@@ -38,6 +38,6 @@ describe("buildContext", () => {
       throw new Error("Expected a low-confidence failure");
     }
 
-    expect(result.message).toContain("Unable to identify reliable repository context");
+    expect(result.message).toContain("No repository vocabulary matched");
   });
 });

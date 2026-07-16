@@ -34,6 +34,14 @@ program
   });
 
 program
+  .command("scan")
+  .argument("[path]", ".", "Repository Path")
+  .description("Alias for inspect")
+  .action((targetPath: string) => {
+    void inspect(targetPath);
+  });
+
+program
   .command("graph")
   .argument("[path]", ".", "Repository")
   .action((targetPath: string) => {
@@ -162,4 +170,17 @@ program
     void evaluateCommand(repo);
   });
 
-program.parse();
+(async () => {
+  try {
+    await program.parseAsync(process.argv);
+  } catch (error) {
+    console.error("===== FULL ERROR =====");
+    if (error instanceof Error) {
+      console.error(error.stack ?? error.message);
+    } else {
+      console.error(error);
+    }
+    console.error("======================");
+    process.exitCode = 1;
+  }
+})();

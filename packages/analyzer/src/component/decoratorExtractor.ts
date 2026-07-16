@@ -2,18 +2,47 @@ import ts from "typescript";
 
 import { Component } from "../types.js";
 
+function getDecoratorName(expression: ts.Expression): string | undefined {
+  const target =
+    ts.isCallExpression(expression)
+      ? expression.expression
+      : expression;
+
+  if (ts.isIdentifier(target)) {
+    return target.escapedText?.toString();
+  }
+
+  if (ts.isPropertyAccessExpression(target)) {
+    return target.name.escapedText?.toString();
+  }
+
+  return undefined;
+}
+
 function hasDecorator(node: ts.ClassDeclaration, name: string) {
   const decorators = ts.getDecorators(node);
+
+  console.log(
+    "CLASS:",
+    node.name?.text,
+    "DECORATORS:",
+    decorators?.map(d => {
+      try {
+        return d.getText();
+      } catch {
+        return "<unknown>";
+      }
+    })
+  );
 
   if (!decorators) return false;
 
   return decorators.some((decorator) => {
-    const expression = decorator.expression;
-    const target = ts.isCallExpression(expression)
-      ? expression.expression
-      : expression;
+    const decoratorName = getDecoratorName(decorator.expression);
 
-    return target.getText() === name || target.getText().endsWith(`.${name}`);
+    if (!decoratorName) return false;
+
+    return decoratorName === name || decoratorName.endsWith(`.${name}`);
   });
 }
 

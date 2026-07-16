@@ -1,12 +1,19 @@
+import type { RankedContext } from "./ranker.js";
 import { loadSnippet } from "./snippet.js";
 import { formatPrompt } from "./formatter.js";
 
-export async function buildPrompt(query: string, files: string[]) {
+export async function buildPrompt(repo: string, query: string, items: RankedContext[]) {
   const snippets = [];
 
-  for (const file of files) {
+  for (const item of items) {
     try {
-      snippets.push(await loadSnippet(file));
+      const preferredTerms = item.reasons.flatMap((reason) =>
+        reason.split(/\s+/).filter(Boolean),
+      );
+
+      snippets.push(
+        await loadSnippet(repo, item.path, 60, preferredTerms),
+      );
     } catch (error) {
       void error;
     }

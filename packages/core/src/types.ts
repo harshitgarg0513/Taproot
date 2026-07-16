@@ -4,30 +4,10 @@ import { BuildMetrics } from "./performance/index.js";
 
 export type { ClassifiedEntity, Entity } from "@eip/analyzer";
 
-export interface RepositoryModel {
+export interface CachedRepositoryModel {
   config: EipConfig;
   metrics: BuildMetrics;
   knowledgeGraph: KnowledgeGraph;
-  componentIndex: Map<
-    string,
-    {
-      id: string;
-      name: string;
-      type: string;
-      file: string;
-      line: number;
-    }
-  >;
-  symbolIndex: Map<
-    string,
-    {
-      id: string;
-      name: string;
-      kind: string;
-      file: string;
-      line: number;
-    }
-  >;
   components: Array<{
     id: string;
     name: string;
@@ -54,6 +34,29 @@ export interface RepositoryModel {
     callee: string;
     file: string;
   }>;
+}
+
+export interface RepositoryModel extends CachedRepositoryModel {
+  componentIndex: Map<
+    string,
+    {
+      id: string;
+      name: string;
+      type: string;
+      file: string;
+      line: number;
+    }
+  >;
+  symbolIndex: Map<
+    string,
+    {
+      id: string;
+      name: string;
+      kind: string;
+      file: string;
+      line: number;
+    }
+  >;
 }
 
 export interface KnowledgeNode {

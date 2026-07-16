@@ -8,15 +8,27 @@ export interface ConfidenceResult {
 }
 
 export function computeConfidence(
-  matchedTokens: number,
+  matchedVocabulary: number,
+  filenameMatches: number,
+  graphCoverage: number,
+  symbolMatches: number,
   queryTokens: number,
-  seedCount: number,
 ): ConfidenceResult {
-  const tokenRatio = queryTokens === 0 ? 0 : matchedTokens / queryTokens;
-  const seedFactor = Math.min(seedCount, 10) / 10;
-  const score = Math.max(tokenRatio * 0.7 + seedFactor * 0.3, tokenRatio * 0.5 + 0.2);
+  const normalized = Math.max(
+    0,
+    Math.min(
+      1,
+      (matchedVocabulary * 0.45 +
+        filenameMatches * 0.3 +
+        graphCoverage * 0.15 +
+        symbolMatches * 0.1) /
+        Math.max(1, queryTokens),
+    ),
+  );
 
-  if (score >= 0.8) {
+  const score = Number((normalized * 100).toFixed(0));
+
+  if (score >= 80) {
     return {
       level: "HIGH",
       score,
@@ -25,7 +37,7 @@ export function computeConfidence(
     };
   }
 
-  if (score >= 0.4) {
+  if (score >= 50) {
     return {
       level: "MEDIUM",
       score,
@@ -37,11 +49,11 @@ export function computeConfidence(
   return {
     level: "LOW",
     score,
-    reason: "Very little repository vocabulary matched.",
+    reason: "No repository vocabulary matched.",
     suggestions: [
-      "Try different engineering terminology.",
-      "Search by component name.",
-      "Search by symbol name.",
+      "Try component names.",
+      "Try feature names.",
+      "Try endpoint names.",
     ],
   };
 }

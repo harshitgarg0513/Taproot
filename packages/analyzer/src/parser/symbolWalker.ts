@@ -91,18 +91,18 @@ export function buildSymbolTable(tree: Parser.Tree, file: string): ParsedFile {
         add(
           parsed,
           "variable",
-          node.text.substring(0, 40),
+          node.text?.substring(0, 40) ?? "anonymous",
           file,
           node.startPosition.row + 1,
         );
         break;
 
       case "import_statement":
-        add(parsed, "import", node.text, file, node.startPosition.row + 1);
+        add(parsed, "import", node.text ?? "import", file, node.startPosition.row + 1);
         break;
 
       case "export_statement":
-        add(parsed, "export", node.text, file, node.startPosition.row + 1);
+        add(parsed, "export", node.text ?? "export", file, node.startPosition.row + 1);
         break;
     }
 

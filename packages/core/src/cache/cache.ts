@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-import { RepositoryModel } from "../types.js";
+import { CachedRepositoryModel, RepositoryModel } from "../types.js";
 
 interface CacheEntry {
-  model: RepositoryModel;
+  model: CachedRepositoryModel;
   timestamp: number;
 }
 
@@ -39,19 +39,41 @@ function writeCache(cache: Map<string, CacheEntry>) {
   );
 }
 
+export function hydrateRepositoryModel(
+  model: CachedRepositoryModel,
+): RepositoryModel {
+  return {
+    ...model,
+    componentIndex: new Map(
+      model.components.map((component) => [component.id, component]),
+    ),
+    symbolIndex: new Map(model.symbols.map((symbol) => [symbol.id, symbol])),
+  };
+}
+
 export function getCachedModel(key: string): RepositoryModel | null {
   const entry = readCache().get(key);
 
   if (!entry) return null;
 
-  return entry.model;
+  return hydrateRepositoryModel(entry.model);
 }
 
 export function setCachedModel(key: string, model: RepositoryModel) {
   const cache = readCache();
 
   cache.set(key, {
-    model,
+    model: {
+      config: model.config,
+      metrics: model.metrics,
+      knowledgeGraph: model.knowledgeGraph,
+      components: model.components,
+      symbols: model.symbols,
+      entities: model.entities,
+      classified: model.classified,
+      relationships: model.relationships,
+      callGraph: model.callGraph,
+    },
     timestamp: Date.now(),
   });
 

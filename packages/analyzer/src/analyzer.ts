@@ -53,7 +53,12 @@ export async function analyzeRepository(
 
     for (const source of program.getSourceFiles()) {
       if (!source.fileName.startsWith(root)) continue;
-      decoratorComponents.push(...extractDecoratorComponents(source));
+      try {
+        decoratorComponents.push(...extractDecoratorComponents(source));
+      } catch (error) {
+        console.error(`Decorator extraction failed for ${source.fileName}`);
+        console.error(error);
+      }
     }
 
     analysis.components = decoratorComponents;

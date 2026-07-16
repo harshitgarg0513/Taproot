@@ -11,8 +11,9 @@ type ContextBuildResult =
       success: true;
       retrieval: ReturnType<typeof retrieve>;
       confidence: ReturnType<typeof retrieve>["confidence"];
-      budget: Array<{ id: string; path: string; score: number; reasons: string[] }>;
+      budget: Array<{ id: string; path: string; score: number; reasons: string[]; ids: string[] }>;
       prompt: string;
+      promptTokens: number;
     }
   | {
       success: false;
@@ -20,8 +21,8 @@ type ContextBuildResult =
       message: string;
     };
 
-export async function generate(model: RepositoryModel, query: string) {
-  const context = await buildContext(model, query);
+export async function generate(model: RepositoryModel, query: string, repo = process.cwd()) {
+  const context = await buildContext(model, query, repo);
 
   if (!context.success) {
     return {
@@ -31,34 +32,44 @@ export async function generate(model: RepositoryModel, query: string) {
     };
   }
 
-  const generation = await complete(context.prompt);
+  try {
+    const generation = await complete(context.prompt);
 
-  return {
-    context,
-    answer: generation.text,
-    generation,
-  };
+    return {
+      context,
+      answer: generation.text,
+      generation,
+    };
+  } catch (error) {
+    return {
+      context,
+      answer: "",
+      generation: undefined,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
 }
 
-export async function buildContext(model: RepositoryModel, query: string): Promise<ContextBuildResult> {
+export async function buildContext(
+  model: RepositoryModel,
+  query: string,
+  repo = process.cwd(),
+): Promise<ContextBuildResult> {
   const retrieval = retrieve(model, query);
 
-  if (retrieval.confidence.level === "LOW") {
+  if (retrieval.ranked.length === 0 || retrieval.confidence.level === "LOW") {
     return {
       success: false,
       confidence: retrieval.confidence,
-      message: "Unable to identify reliable repository context.",
+      message: "No repository vocabulary matched. Try component names, feature names, or endpoint names.",
     };
   }
 
-  const seedIds = retrieval.expanded.size > 0 ? retrieval.expanded : new Set<string>();
-  const ranked = rankContext(model, seedIds);
+  const ranked = rankContext(model, retrieval.ranked);
   const optimized = optimize(ranked);
   const budget = applyBudget(optimized);
-  const prompt = await buildPrompt(
-    query,
-    budget.map((item) => item.path),
-  );
+  const prompt = await buildPrompt(repo, query, budget);
+  const promptTokens = Math.ceil(prompt.length / 4);
 
   return {
     success: true,
@@ -66,5 +77,6 @@ export async function buildContext(model: RepositoryModel, query: string): Promi
     confidence: retrieval.confidence,
     budget,
     prompt,
+    promptTokens,
   };
 }

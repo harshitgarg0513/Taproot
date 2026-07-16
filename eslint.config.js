@@ -5,7 +5,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["dist", "coverage", "node_modules", ".turbo", "apps/vscode/dist"],
+    ignores: ["dist", "coverage", "node_modules", ".turbo", ".eval-repos", "apps/vscode/dist"],
   },
   {
     languageOptions: {

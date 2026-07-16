@@ -25,7 +25,7 @@ export function buildCallGraph(
     if (node.type === "call_expression") {
       const fn = node.childForFieldName("function");
 
-      if (fn) {
+      if (fn?.text) {
         calls.push({
           caller: currentFunction,
           callee: fn.text,

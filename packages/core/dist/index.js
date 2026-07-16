@@ -32,15 +32,34 @@ function writeCache(cache) {
     JSON.stringify(Object.fromEntries(cache.entries()), null, 2)
   );
 }
+function hydrateRepositoryModel(model) {
+  return {
+    ...model,
+    componentIndex: new Map(
+      model.components.map((component) => [component.id, component])
+    ),
+    symbolIndex: new Map(model.symbols.map((symbol) => [symbol.id, symbol]))
+  };
+}
 function getCachedModel(key) {
   const entry = readCache().get(key);
   if (!entry) return null;
-  return entry.model;
+  return hydrateRepositoryModel(entry.model);
 }
 function setCachedModel(key, model) {
   const cache = readCache();
   cache.set(key, {
-    model,
+    model: {
+      config: model.config,
+      metrics: model.metrics,
+      knowledgeGraph: model.knowledgeGraph,
+      components: model.components,
+      symbols: model.symbols,
+      entities: model.entities,
+      classified: model.classified,
+      relationships: model.relationships,
+      callGraph: model.callGraph
+    },
     timestamp: Date.now()
   });
   writeCache(cache);
@@ -472,21 +491,21 @@ function analyzeRisk(model, target) {
   );
   const impactedSymbols = model.symbols.filter((symbol) => impactedFiles2.includes(symbol.file)).map((symbol) => symbol.name);
   const impactedComponents = model.classified.filter((component) => impactedFiles2.includes(component.entity.file)).map((component) => component.entity.name);
-  const score2 = Math.min(
+  const score = Math.min(
     100,
     impactedFiles2.length * 8 + impactedSymbols.length * 0.5
   );
   let level;
-  if (score2 < 30) {
+  if (score < 30) {
     level = "LOW";
-  } else if (score2 < 70) {
+  } else if (score < 70) {
     level = "MEDIUM";
   } else {
     level = "HIGH";
   }
   return {
     target,
-    score: score2,
+    score,
     level,
     impactedFiles: [...new Set(impactedFiles2)],
     impactedSymbols: [...new Set(impactedSymbols)],
@@ -582,21 +601,6 @@ function generateCandidates(query, vocabulary) {
   return scores;
 }
 
-// src/retrieval/scorer.ts
-function score(candidateScores) {
-  const results = [];
-  for (const [id, score2] of candidateScores) {
-    results.push({
-      id,
-      path: id,
-      score: score2,
-      reasons: ["matched repository vocabulary"]
-    });
-  }
-  results.sort((a, b) => b.score - a.score);
-  return results;
-}
-
 // src/retrieval/expander.ts
 function expand(model, seedIds) {
   const visited = new Set(seedIds);
@@ -618,34 +622,39 @@ function expand(model, seedIds) {
 }
 
 // src/retrieval/confidence.ts
-function computeConfidence(matchedTokens, queryTokens, seedCount) {
-  const tokenRatio = queryTokens === 0 ? 0 : matchedTokens / queryTokens;
-  const seedFactor = Math.min(seedCount, 10) / 10;
-  const score2 = Math.max(tokenRatio * 0.7 + seedFactor * 0.3, tokenRatio * 0.5 + 0.2);
-  if (score2 >= 0.8) {
+function computeConfidence(matchedVocabulary, filenameMatches, graphCoverage, symbolMatches, queryTokens) {
+  const normalized = Math.max(
+    0,
+    Math.min(
+      1,
+      (matchedVocabulary * 0.45 + filenameMatches * 0.3 + graphCoverage * 0.15 + symbolMatches * 0.1) / Math.max(1, queryTokens)
+    )
+  );
+  const score = Number((normalized * 100).toFixed(0));
+  if (score >= 80) {
     return {
       level: "HIGH",
-      score: score2,
+      score,
       reason: "Repository vocabulary matched strongly.",
       suggestions: []
     };
   }
-  if (score2 >= 0.4) {
+  if (score >= 50) {
     return {
       level: "MEDIUM",
-      score: score2,
+      score,
       reason: "Partial repository vocabulary matched.",
       suggestions: []
     };
   }
   return {
     level: "LOW",
-    score: score2,
-    reason: "Very little repository vocabulary matched.",
+    score,
+    reason: "No repository vocabulary matched.",
     suggestions: [
-      "Try different engineering terminology.",
-      "Search by component name.",
-      "Search by symbol name."
+      "Try component names.",
+      "Try feature names.",
+      "Try endpoint names."
     ]
   };
 }
@@ -663,85 +672,193 @@ function resolvePath(model, id) {
   const entity = model.entities.find((candidate) => candidate.id === id);
   return entity?.file ?? id;
 }
+function resolveDetails(model, id) {
+  return model.componentIndex.get(id) ?? model.symbolIndex.get(id) ?? model.components.find((candidate) => candidate.id === id) ?? model.symbols.find((candidate) => candidate.id === id) ?? model.entities.find((candidate) => candidate.id === id);
+}
+function buildEntry(path6, id, score, reasons) {
+  return {
+    id: path6,
+    path: path6,
+    score,
+    reasons,
+    ids: [id]
+  };
+}
 function retrieve(model, query) {
+  const tokens = tokenize(query);
   const vocabulary = buildVocabulary(model);
   const candidateScores = generateCandidates(query, vocabulary);
-  const ranked = score(candidateScores).map((result) => ({
-    ...result,
-    path: resolvePath(model, result.id)
-  }));
-  const seeds = new Set(ranked.slice(0, 10).map((result) => result.id));
-  const expanded = expand(model, seeds);
-  const tokens = tokenize(query);
-  const matchedTokenCount = ranked.filter((result) => result.score > 0).length;
-  const confidence = computeConfidence(matchedTokenCount, tokens.length, seeds.size);
+  const byPath = /* @__PURE__ */ new Map();
+  for (const [id, tokenCount] of candidateScores) {
+    const path6 = resolvePath(model, id);
+    const details = resolveDetails(model, id);
+    const entry = byPath.get(path6) ?? buildEntry(path6, id, 0, []);
+    let score = tokenCount * 8;
+    const reasons = new Set(entry.reasons);
+    reasons.add("matched vocabulary");
+    const normalizedPath = path6.split("/").pop() ?? path6;
+    const fileTokens = tokenize(normalizedPath);
+    const filenameMatch = fileTokens.some((token) => tokens.includes(token));
+    if (filenameMatch) {
+      score += 10;
+      reasons.add("matched filename");
+    }
+    if (details && "type" in details && details.type) {
+      score += 6;
+      reasons.add("matched component");
+    } else if (details && "kind" in details && details.kind) {
+      score += 4;
+      reasons.add("matched symbol");
+    }
+    entry.score += score;
+    entry.reasons = Array.from(reasons);
+    entry.ids = Array.from(/* @__PURE__ */ new Set([...entry.ids, id]));
+    byPath.set(path6, entry);
+  }
+  const ranked = Array.from(byPath.values()).sort((a, b) => b.score - a.score);
+  const topSeeds = ranked.slice(0, 8).flatMap((item) => item.ids);
+  const expanded = expand(model, new Set(topSeeds));
+  for (const id of expanded) {
+    const path6 = resolvePath(model, id);
+    const entry = byPath.get(path6) ?? buildEntry(path6, id, 0, []);
+    entry.score += 2;
+    entry.reasons = Array.from(/* @__PURE__ */ new Set([...entry.reasons, "graph expansion"]));
+    entry.ids = Array.from(/* @__PURE__ */ new Set([...entry.ids, id]));
+    byPath.set(path6, entry);
+  }
+  const finalRanked = Array.from(byPath.values()).sort((a, b) => b.score - a.score);
+  const matchedVocabulary = finalRanked.filter((item) => item.reasons.includes("matched vocabulary")).length;
+  const filenameMatches = finalRanked.filter((item) => item.reasons.includes("matched filename")).length;
+  const symbolMatches = finalRanked.filter((item) => item.reasons.includes("matched symbol")).length;
+  const graphCoverage = finalRanked.filter((item) => item.reasons.includes("graph expansion")).length;
+  const confidence = computeConfidence(
+    matchedVocabulary,
+    filenameMatches,
+    graphCoverage,
+    symbolMatches,
+    tokens.length
+  );
   return {
     query,
     tokens,
-    ranked,
+    ranked: finalRanked,
     expanded,
     confidence
   };
 }
 
 // src/context/ranker.ts
-function rankContext(model, expanded) {
-  const ranked = [];
-  for (const id of expanded) {
-    let score2 = 0;
-    const reasons = [];
-    const degree = model.knowledgeGraph.edges.filter(
-      (edge) => edge.from === id || edge.to === id
-    ).length;
-    score2 += degree;
-    reasons.push(`graph-degree:${degree}`);
-    const component = model.componentIndex.get(id) ?? model.components.find((candidate) => candidate.id === id);
-    const symbol = model.symbolIndex.get(id) ?? model.symbols.find((candidate) => candidate.id === id);
-    const path5 = component?.file ?? symbol?.file ?? id;
-    const displayId = component?.name ?? symbol?.name ?? id;
-    ranked.push({
-      id: displayId,
-      path: path5,
-      score: score2,
-      reasons
-    });
+function rankContext(_model, ranked) {
+  const aggregated = /* @__PURE__ */ new Map();
+  for (const item of ranked) {
+    const existing = aggregated.get(item.path) ?? {
+      id: item.path,
+      path: item.path,
+      score: 0,
+      reasons: [],
+      ids: []
+    };
+    existing.score += item.score;
+    existing.reasons = Array.from(/* @__PURE__ */ new Set([...existing.reasons, ...item.reasons]));
+    existing.ids = Array.from(/* @__PURE__ */ new Set([...existing.ids, ...item.ids]));
+    aggregated.set(item.path, existing);
   }
-  ranked.sort((a, b) => b.score - a.score);
-  return ranked;
+  return Array.from(aggregated.values()).map((item) => {
+    let score = item.score;
+    const fileName = item.path.split("/").pop() ?? item.path;
+    if (fileName === "index.ts" || fileName === "barrel.ts") {
+      score -= 2;
+    }
+    return {
+      ...item,
+      score
+    };
+  }).sort((a, b) => b.score - a.score);
 }
 
 // src/context/optimizer.ts
 function optimize(ranked) {
-  const seen = /* @__PURE__ */ new Set();
-  return ranked.filter((item) => {
-    if (seen.has(item.id)) {
-      return false;
+  const byPath = /* @__PURE__ */ new Map();
+  for (const item of ranked) {
+    const previous = byPath.get(item.path);
+    if (!previous || item.score > previous.score) {
+      byPath.set(item.path, item);
     }
-    seen.add(item.id);
-    return true;
-  });
+  }
+  return Array.from(byPath.values()).sort((a, b) => b.score - a.score);
 }
 
 // src/context/budget.ts
-function applyBudget(items, maxItems = 20) {
-  return items.slice(0, maxItems);
+function applyBudget(items, maxItems = 8, maxTokens = 7e3) {
+  let usedTokens = 0;
+  const selected = [];
+  for (const item of items) {
+    if (selected.length >= maxItems) {
+      break;
+    }
+    const estimatedTokens = Math.ceil((item.path.length + (item.score.toString().length + item.reasons.join(" ").length)) / 4);
+    if (selected.length > 0 && usedTokens + estimatedTokens > maxTokens) {
+      break;
+    }
+    usedTokens += estimatedTokens;
+    selected.push(item);
+  }
+  return selected;
 }
 
 // src/context/snippet.ts
 import fs3 from "fs/promises";
-async function loadSnippet(file, maxLines = 150) {
-  const text = await fs3.readFile(file, "utf8");
-  const lines = text.split("\n");
+import path4 from "path";
+async function loadSnippet(repo, file, maxLines = 60, preferredTerms = []) {
+  const absolutePath = path4.isAbsolute(file) ? file : path4.resolve(repo, file);
+  const displayPath = path4.relative(repo, absolutePath) || path4.basename(absolutePath);
+  const text = await fs3.readFile(absolutePath, "utf8");
+  const lines = text.split(/\r?\n/);
+  const meaningful = lines.map((line, index) => ({ line: index + 1, text: line })).filter((entry) => entry.text.trim().length > 0);
+  if (meaningful.length === 0) {
+    return {
+      file: displayPath,
+      content: "",
+      lines: 0,
+      startLine: 1,
+      endLine: 1
+    };
+  }
+  let startLine = 1;
+  let endLine = Math.min(lines.length, maxLines);
+  if (preferredTerms.length > 0) {
+    const match = meaningful.find(
+      (entry) => preferredTerms.some(
+        (term) => entry.text.toLowerCase().includes(term.toLowerCase())
+      )
+    );
+    if (match) {
+      startLine = Math.max(1, match.line - 30);
+      endLine = Math.min(lines.length, match.line + 60);
+    }
+  }
+  if (startLine === 1 && endLine === Math.min(lines.length, maxLines)) {
+    const sample = meaningful.slice(0, maxLines);
+    const first = sample[0];
+    const last = sample[sample.length - 1];
+    if (first && last) {
+      startLine = first.line;
+      endLine = last.line;
+    }
+  }
+  const content = lines.slice(startLine - 1, endLine).join("\n").trim();
   return {
-    file,
-    content: lines.slice(0, maxLines).join("\n"),
-    lines: lines.length
+    file: displayPath,
+    content,
+    lines: lines.length,
+    startLine,
+    endLine
   };
 }
 
 // src/context/formatter.ts
 function formatPrompt(query, snippets) {
-  let prompt = `You are an experienced software engineer.
+  let prompt = `You are a senior backend engineer.
 
 Task
 
@@ -753,13 +870,15 @@ Repository Context
     prompt += `
 ================================
 
-FILE
+File
 
 ${snippet.file}
 
---------------------------------
+Relevant snippet
 
+\`\`\`ts
 ${snippet.content}
+\`\`\`
 `;
   }
   prompt += `
@@ -777,11 +896,16 @@ Instructions
 }
 
 // src/context/prompt.ts
-async function buildPrompt(query, files) {
+async function buildPrompt(repo, query, items) {
   const snippets = [];
-  for (const file of files) {
+  for (const item of items) {
     try {
-      snippets.push(await loadSnippet(file));
+      const preferredTerms = item.reasons.flatMap(
+        (reason) => reason.split(/\s+/).filter(Boolean)
+      );
+      snippets.push(
+        await loadSnippet(repo, item.path, 60, preferredTerms)
+      );
     } catch (error) {
       void error;
     }
@@ -790,11 +914,35 @@ async function buildPrompt(query, files) {
 }
 
 // src/context/provider.ts
-import { complete } from "@eip/gemini";
+import { complete as completeWithAnthropic } from "@eip/anthropic";
+import { complete as completeWithGemini } from "@eip/gemini";
+function hasAnthropicKey() {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  return Boolean(apiKey && apiKey !== "YOUR_KEY");
+}
+async function complete(prompt) {
+  try {
+    return await completeWithGemini(prompt);
+  } catch (geminiError) {
+    if (!hasAnthropicKey()) {
+      throw geminiError;
+    }
+    try {
+      return await completeWithAnthropic(prompt);
+    } catch (anthropicError) {
+      const geminiMessage = geminiError instanceof Error ? geminiError.message : String(geminiError);
+      const anthropicMessage = anthropicError instanceof Error ? anthropicError.message : String(anthropicError);
+      throw new Error(
+        `Generation failed. Gemini: ${geminiMessage} | Anthropic: ${anthropicMessage}`,
+        { cause: anthropicError }
+      );
+    }
+  }
+}
 
 // src/context/context.ts
-async function generate(model, query) {
-  const context = await buildContext(model, query);
+async function generate(model, query, repo = process.cwd()) {
+  const context = await buildContext(model, query, repo);
   if (!context.success) {
     return {
       context,
@@ -802,41 +950,48 @@ async function generate(model, query) {
       generation: void 0
     };
   }
-  const generation = await complete(context.prompt);
-  return {
-    context,
-    answer: generation.text,
-    generation
-  };
+  try {
+    const generation = await complete(context.prompt);
+    return {
+      context,
+      answer: generation.text,
+      generation
+    };
+  } catch (error) {
+    return {
+      context,
+      answer: "",
+      generation: void 0,
+      error: error instanceof Error ? error : new Error(String(error))
+    };
+  }
 }
-async function buildContext(model, query) {
+async function buildContext(model, query, repo = process.cwd()) {
   const retrieval = retrieve(model, query);
-  if (retrieval.confidence.level === "LOW") {
+  if (retrieval.ranked.length === 0 || retrieval.confidence.level === "LOW") {
     return {
       success: false,
       confidence: retrieval.confidence,
-      message: "Unable to identify reliable repository context."
+      message: "No repository vocabulary matched. Try component names, feature names, or endpoint names."
     };
   }
-  const seedIds = retrieval.expanded.size > 0 ? retrieval.expanded : /* @__PURE__ */ new Set();
-  const ranked = rankContext(model, seedIds);
+  const ranked = rankContext(model, retrieval.ranked);
   const optimized = optimize(ranked);
   const budget = applyBudget(optimized);
-  const prompt = await buildPrompt(
-    query,
-    budget.map((item) => item.path)
-  );
+  const prompt = await buildPrompt(repo, query, budget);
+  const promptTokens = Math.ceil(prompt.length / 4);
   return {
     success: true,
     retrieval,
     confidence: retrieval.confidence,
     budget,
-    prompt
+    prompt,
+    promptTokens
   };
 }
 
 // src/evaluation/evaluator.ts
-import path4 from "path";
+import path5 from "path";
 
 // src/evaluation/metrics.ts
 function calculate(predicted, actual) {
@@ -853,18 +1008,20 @@ function calculate(predicted, actual) {
 
 // src/evaluation/evaluator.ts
 function normalizePath(filePath, repoRoot) {
-  const absoluteRepoRoot = path4.resolve(repoRoot);
-  const normalizedPath = filePath.replace(/\\/g, "/");
+  const absoluteRepoRoot = path5.resolve(repoRoot);
+  let normalizedPath = filePath.replace(/\\/g, "/");
   if (normalizedPath.startsWith(absoluteRepoRoot.replace(/\\/g, "/"))) {
-    return path4.relative(absoluteRepoRoot, normalizedPath).replace(/\\/g, "/");
+    normalizedPath = path5.relative(absoluteRepoRoot, normalizedPath).replace(/\\/g, "/");
   }
-  return normalizedPath.replace(/^\.\//, "");
+  normalizedPath = normalizedPath.replace(/^\.\//, "").replace(/^\/+/, "");
+  return normalizedPath.toLowerCase();
 }
 function evaluateCommit(model, message, actualFiles, repoRoot = ".") {
   const retrieval = retrieve(model, message);
-  const predicted = new Set(
-    retrieval.ranked.map((result) => normalizePath(result.path, repoRoot))
-  );
+  const ranked = rankContext(model, retrieval.ranked);
+  const optimized = optimize(ranked);
+  const budget = applyBudget(optimized);
+  const predicted = new Set(budget.map((item) => normalizePath(item.path, repoRoot)));
   const actual = new Set(actualFiles.map((file) => normalizePath(file, repoRoot)));
   return calculate(predicted, actual);
 }
@@ -954,6 +1111,7 @@ export {
   getCachedModel,
   getChangedFiles,
   getCommitHistory,
+  hydrateRepositoryModel,
   impactedFiles,
   inferResponsibility,
   listComponents,

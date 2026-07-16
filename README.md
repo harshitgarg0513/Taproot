@@ -1,117 +1,171 @@
-# Engineering Intelligence Engine (EIP)
+# Sclare — Engineering Intelligence Engine (EIP)
 
-## Motivation
+Deterministic repository analysis and context retrieval for AI coding assistants. Sclare builds a structural model of a TypeScript codebase, retrieves only the files relevant to a natural-language task, and assembles a token-budgeted prompt before any LLM is invoked.
 
-Why AI coding assistants modify too much code.
+Most coding assistants dump the open file, nearby imports, or a semantic search top-k into the prompt. That wastes tokens, invites hallucinated edits in unrelated files, and gives you no way to measure whether the context was actually right. Sclare answers a narrower, more useful question: **given a task description, which files should the model see?**
 
 ---
 
 ## Problem
 
-Current coding assistants receive too much repository context.
+When an AI assistant receives too much repository context:
 
-This increases:
-
-- token usage
-- hallucinations
-- unnecessary edits
+- **Token cost scales with repo size**, not task relevance
+- **Hallucinated cross-file edits** increase when unrelated modules appear in context
+- **No feedback loop** — you cannot tell if retrieval picked the right files
 
 ---
 
 ## Solution
 
-EIP builds a deterministic repository model and retrieves only the most relevant engineering context before invoking an LLM.
+Sclare runs a fixed pipeline before any LLM call:
+
+```mermaid
+flowchart TD
+    A[Natural language intent] --> B[Seed retrieval]
+    B --> C[Graph expansion]
+    C --> D[Rank and deduplicate]
+    D --> E[Apply token budget]
+    E --> F[Prompt builder]
+    F --> G[LLM]
+```
+
+1. **Scan** — walk the repo, extract symbols, components, entities, import/call graphs
+2. **Retrieve** — match query tokens against a repository vocabulary (components, symbols, filenames, graph neighbors)
+3. **Rank & optimize** — aggregate scores per file, penalize barrel files, deduplicate
+4. **Budget** — cap output to 8 files / ~7k tokens (what the user actually sees)
+5. **Prompt** — inject source snippets for selected files only
+
+The same budget output feeds both the CLI/VS Code demo and the evaluation harness, so measured precision/recall reflect what users get.
 
 ---
 
-## Architecture
+## Quick start
 
-Natural Language Intent
+```bash
+pnpm install
+pnpm build
 
-↓
+# Analyze a repository
+node apps/cli/dist/index.js inspect .
 
-Seed Retrieval
+# Retrieve context for a task (no LLM required)
+node apps/cli/dist/index.js context . "add confidence scoring to retrieval"
 
-↓
+# Full pipeline with LLM answer (requires ANTHROPIC_API_KEY or GEMINI_API_KEY in .env)
+node apps/cli/dist/index.js context . "explain the evaluation pipeline"
 
-Repository Graph Expansion
+# Backtest retrieval against git history
+node apps/cli/dist/index.js evaluate .
+```
 
-↓
+Set API keys in `.env` at the repo root:
 
-Context Optimization
-
-↓
-
-Prompt Builder
-
-↓
-
-LLM
+```
+ANTHROPIC_API_KEY=sk-...
+GEMINI_API_KEY=...
+```
 
 ---
 
-## Features
+## CLI commands
 
-- Repository Scanner
-- Entity Extraction
-- Knowledge Graph
-- Deterministic Seed Retrieval
-- Context Optimization
-- Risk Analysis
-- Explain
-- Evaluation
-- VS Code Extension
+| Command | Description |
+|---------|-------------|
+| `inspect` / `scan` | Build repository model, print symbol/component counts |
+| `context <repo> <query>` | Run retrieval → rank → budget → prompt (optional LLM) |
+| `evaluate <repo>` | Score retrieval against recent git commits |
+| `search`, `impact`, `explain`, `risk` | Query the knowledge graph |
+| `components`, `calls`, `graph` | Inspect structure |
+
+---
+
+## VS Code extension
+
+The `eip-vscode` extension exposes **Engineering Context** as a command palette action. It runs the same `buildContext` pipeline and renders selected files, confidence score, and the assembled prompt in a webview panel.
 
 ---
 
 ## Evaluation
 
-Evaluation measures how well retrieved repository context aligns with the files actually changed by a commit.
+Evaluation measures how well the **final budget output** (post-`rankContext` / `optimize` / `applyBudget`) aligns with files actually changed in each commit. Changed files are a proxy for ground-truth relevance.
 
-- Precision: how many selected files are relevant
-- Recall: how many relevant files were selected
-- F1: the harmonic mean of precision and recall
+| Metric | Meaning |
+|--------|---------|
+| **Precision** | Share of selected files that were actually changed |
+| **Recall** | Share of changed files that were selected |
+| **F1** | Harmonic mean of precision and recall |
 
-Files changed in commits are a proxy for relevance.
+Commits are filtered with `commitFilter.ts` — merges, formatting, lint, dependency bumps, and large diffs (>20 files) are excluded so scores reflect feature/fix work.
+
+### Results (July 2026)
+
+Run with `eip evaluate <repo>` after `pnpm build`.
+
+#### Sclare (self-eval, 31 commits, last 30 scanned)
+
+| Commits evaluated | Precision | Recall | F1 |
+|-------------------|-----------|--------|-----|
+| 6 | **0.51** | **0.46** | **0.47** |
+
+Evaluated commits include `feat(retrieval): implement deterministic seed retrieval engine`, `feat(context): implement context optimization engine`, `feat(evaluation): evaluate retrieval using git history`, and similar feature work where commit messages name the subsystem being changed.
+
+#### BeatRoute NestJS monorepo (enterprise snapshot)
+
+The BeatRoute microservice boilerplate (`boilerplate-ms-main`, 121 TypeScript files, 1,549 symbols, 65 NestJS components) was used throughout development for live retrieval testing. The local snapshot has **no git history**, so commit-based metrics cannot be computed from it. Point `eip evaluate` at any git-backed NestJS monorepo to reproduce.
 
 ---
 
-## Current Limitations
+## Architecture
 
-- Conventional naming assumed
+```
+packages/
+  analyzer/    TypeScript AST walk — symbols, components, entities, graphs
+  core/        Retrieval, context budget, evaluation, reasoning, cache
+  observer/    File discovery and repo snapshot
+  config/      Per-repo configuration
+  providers/   LLM adapters (Anthropic, Gemini)
+apps/
+  cli/         `eip` command-line tool
+  vscode/      VS Code extension
+```
+
+Key design choices:
+
+- **Deterministic retrieval** — same query + same repo always yields the same file set; no embedding drift
+- **Graph expansion** — seed matches propagate along import and call edges
+- **Confidence gating** — LOW-confidence queries are rejected before an LLM is called
+- **Disk cache** — analyzed models persist in `.eip-cache.json` (gitignored)
+
+---
+
+## Current limitations
+
 - TypeScript only
-- Deterministic retrieval (Embeddings planned)
+- Conventional naming helps (kebab-case files, NestJS decorators, barrel detection)
+- Deterministic token matching — embedding/hybrid retrieval planned for v2
+- Evaluation window is the last 30 commits by default
 
 ---
 
 ## Roadmap
 
-V2
-
-- Hybrid Retrieval
-- Embedding Signals
-- Multi-language
-- Git History Weighting
-- Plugin SDK
+- Hybrid retrieval (deterministic + embeddings)
+- Git history weighting for ranking
+- Multi-language support
+- Plugin SDK for custom vocabulary sources
 
 ---
 
-## Demo
+## Development
 
-GIF
+```bash
+pnpm test          # vitest
+pnpm coverage      # coverage report
+pnpm lint          # eslint
+```
 
-Screenshots
-
----
-
-## Badges
-
-- Build
-- Coverage
-- License
-- TypeScript
-- Node
-- pnpm
+Monorepo managed with **pnpm workspaces** and **Turborepo**.
 
 ---
 

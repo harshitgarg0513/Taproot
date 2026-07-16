@@ -6,7 +6,15 @@ import dotenv from "dotenv";
 const envPath = resolve(fileURLToPath(new URL("../../../.env", import.meta.url)));
 dotenv.config({ path: envPath });
 
-export async function complete(prompt: string) {
+export interface GenerationResult {
+  provider: string;
+  model: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  text: string;
+}
+
+export async function complete(prompt: string): Promise<GenerationResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
 
   if (!apiKey || apiKey === "YOUR_KEY") {
@@ -14,17 +22,21 @@ export async function complete(prompt: string) {
   }
 
   const client = new Anthropic({ apiKey });
+  const model = "claude-sonnet-4-20250514";
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model,
     max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
   });
 
   const first = response.content[0];
+  const text = first?.type === "text" ? first.text : "";
 
-  if (!first || first.type !== "text") {
-    return "";
-  }
-
-  return first.text;
+  return {
+    provider: "anthropic",
+    model,
+    promptTokens: response.usage.input_tokens,
+    completionTokens: response.usage.output_tokens,
+    text,
+  };
 }

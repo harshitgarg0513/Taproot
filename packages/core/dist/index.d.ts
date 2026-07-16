@@ -3,8 +3,6 @@ import * as _eip_analyzer from '@eip/analyzer';
 import { Entity, ClassifiedEntity } from '@eip/analyzer';
 export { ClassifiedEntity, Entity } from '@eip/analyzer';
 import { Result } from '@eip/shared';
-import * as _eip_gemini from '@eip/gemini';
-export { complete } from '@eip/gemini';
 
 declare class Timer {
     private readonly start;
@@ -18,24 +16,10 @@ interface BuildMetrics {
     totalMs: number;
 }
 
-interface RepositoryModel {
+interface CachedRepositoryModel {
     config: EipConfig;
     metrics: BuildMetrics;
     knowledgeGraph: KnowledgeGraph;
-    componentIndex: Map<string, {
-        id: string;
-        name: string;
-        type: string;
-        file: string;
-        line: number;
-    }>;
-    symbolIndex: Map<string, {
-        id: string;
-        name: string;
-        kind: string;
-        file: string;
-        line: number;
-    }>;
     components: Array<{
         id: string;
         name: string;
@@ -61,6 +45,22 @@ interface RepositoryModel {
         caller: string;
         callee: string;
         file: string;
+    }>;
+}
+interface RepositoryModel extends CachedRepositoryModel {
+    componentIndex: Map<string, {
+        id: string;
+        name: string;
+        type: string;
+        file: string;
+        line: number;
+    }>;
+    symbolIndex: Map<string, {
+        id: string;
+        name: string;
+        kind: string;
+        file: string;
+        line: number;
     }>;
 }
 interface KnowledgeNode {
@@ -135,6 +135,7 @@ declare function buildKnowledge(repo: string): Promise<Result<KnowledgeGraph>>;
 
 declare function buildKnowledgeGraph(model: RepositoryModel): KnowledgeGraph;
 
+declare function hydrateRepositoryModel(model: CachedRepositoryModel): RepositoryModel;
 declare function getCachedModel(key: string): RepositoryModel | null;
 declare function setCachedModel(key: string, model: RepositoryModel): void;
 declare function clearCache(): void;
@@ -204,15 +205,17 @@ interface ConfidenceResult {
     suggestions: string[];
 }
 
+interface RetrievalResult {
+    id: string;
+    path: string;
+    score: number;
+    reasons: string[];
+    ids: string[];
+}
 declare function retrieve(model: RepositoryModel, query: string): {
     query: string;
     tokens: string[];
-    ranked: {
-        path: string;
-        id: string;
-        score: number;
-        reasons: string[];
-    }[];
+    ranked: RetrievalResult[];
     expanded: Set<string>;
     confidence: ConfidenceResult;
 };
@@ -225,6 +228,15 @@ interface RetrievalTrace {
     expandedCount: number;
 }
 
+interface GenerationResult {
+    provider: string;
+    model: string;
+    promptTokens?: number;
+    completionTokens?: number;
+    text: string;
+}
+declare function complete(prompt: string): Promise<GenerationResult>;
+
 type ContextBuildResult = {
     success: true;
     retrieval: ReturnType<typeof retrieve>;
@@ -234,14 +246,16 @@ type ContextBuildResult = {
         path: string;
         score: number;
         reasons: string[];
+        ids: string[];
     }>;
     prompt: string;
+    promptTokens: number;
 } | {
     success: false;
     confidence: ReturnType<typeof retrieve>["confidence"];
     message: string;
 };
-declare function generate(model: RepositoryModel, query: string): Promise<{
+declare function generate(model: RepositoryModel, query: string, repo?: string): Promise<{
     context: {
         success: false;
         confidence: ReturnType<typeof retrieve>["confidence"];
@@ -249,6 +263,7 @@ declare function generate(model: RepositoryModel, query: string): Promise<{
     };
     answer: string;
     generation: undefined;
+    error?: never;
 } | {
     context: {
         success: true;
@@ -259,21 +274,34 @@ declare function generate(model: RepositoryModel, query: string): Promise<{
             path: string;
             score: number;
             reasons: string[];
+            ids: string[];
         }>;
         prompt: string;
+        promptTokens: number;
     };
     answer: string;
-    generation: _eip_gemini.GenerationResult;
+    generation: GenerationResult;
+    error?: never;
+} | {
+    context: {
+        success: true;
+        retrieval: ReturnType<typeof retrieve>;
+        confidence: ReturnType<typeof retrieve>["confidence"];
+        budget: Array<{
+            id: string;
+            path: string;
+            score: number;
+            reasons: string[];
+            ids: string[];
+        }>;
+        prompt: string;
+        promptTokens: number;
+    };
+    answer: string;
+    generation: undefined;
+    error: Error;
 }>;
-declare function buildContext(model: RepositoryModel, query: string): Promise<ContextBuildResult>;
-
-interface GenerationResult {
-    provider: string;
-    model: string;
-    promptTokens?: number;
-    completionTokens?: number;
-    text: string;
-}
+declare function buildContext(model: RepositoryModel, query: string, repo?: string): Promise<ContextBuildResult>;
 
 interface Metrics {
     precision: number;
@@ -295,4 +323,4 @@ declare function getChangedFiles(repo: string, hash: string): string[];
 
 declare function shouldEvaluate(message: string, files: string[]): boolean;
 
-export { type BuildMetrics, type Commit, type DependencySummary, type ExplainComponentResult, type GenerationResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, createCacheKey, dependenciesOf, dependentsOf, evaluateCommit, explain, explainComponent, findComponent, findSymbol, generate, getCachedModel, getChangedFiles, getCommitHistory, impactedFiles, inferResponsibility, listComponents, printExplain, printReport, printRisk, retrieve, searchRepository, setCachedModel, shouldEvaluate };
+export { type BuildMetrics, type CachedRepositoryModel, type Commit, type DependencySummary, type ExplainComponentResult, type GenerationResult, type ImpactResult, type KnowledgeEdge, type KnowledgeGraph, type KnowledgeNode, type RepositoryModel, type RetrievalResult, type RetrievalTrace, type RiskResult, type SearchResult, Timer, analyzeImpact, analyzeRisk, buildContext, buildDependencySummary, buildKnowledge, buildKnowledgeGraph, buildRepositoryModel, cacheSize, clearCache, complete, createCacheKey, dependenciesOf, dependentsOf, evaluateCommit, explain, explainComponent, findComponent, findSymbol, generate, getCachedModel, getChangedFiles, getCommitHistory, hydrateRepositoryModel, impactedFiles, inferResponsibility, listComponents, printExplain, printReport, printRisk, retrieve, searchRepository, setCachedModel, shouldEvaluate };

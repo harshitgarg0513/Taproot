@@ -66,78 +66,109 @@ import { analyzeRepository as analyzeRepository4 } from "@eip/analyzer";
 import { observeRepository } from "@eip/observer";
 import { formatDuration } from "@eip/shared";
 async function inspect(path) {
-  const snapshotResult = await observeRepository(path);
+  let snapshotResult;
+  let analysisResult;
+  console.log("[inspect] observing repository");
+  try {
+    snapshotResult = await observeRepository(path);
+  } catch (error) {
+    console.error("Failed during repository observation:");
+    console.error(error);
+    process.exit(1);
+  }
+  console.log("[inspect] observation complete");
   if (!snapshotResult.success) {
     console.error(snapshotResult.error.message);
     process.exit(1);
   }
-  const analysisResult = await analyzeRepository4(path);
+  console.log("[inspect] analyzing repository");
+  try {
+    analysisResult = await analyzeRepository4(path);
+  } catch (error) {
+    console.error("Failed during repository analysis:");
+    console.error(error);
+    process.exit(1);
+  }
+  console.log("[inspect] analysis complete");
   if (!analysisResult.success) {
     console.error(analysisResult.error.message);
     process.exit(1);
   }
-  const snapshot = snapshotResult.data;
-  const analysis = analysisResult.data;
-  console.log();
-  console.log(pc.cyan("Engineering Intelligence Platform"));
-  console.log("--------------------------------------");
-  console.log("Repository       :", snapshot.name);
-  console.log("Path             :", snapshot.rootPath);
-  console.log("Languages        :", snapshot.languages.join(", "));
-  console.log("Framework        :", snapshot.framework ?? "-");
-  console.log("Package Manager  :", snapshot.packageManager ?? "-");
-  console.log("Git              :", snapshot.hasGit ? "Yes" : "No");
-  console.log("Files            :", snapshot.totalFiles);
-  console.log("Directories      :", snapshot.totalDirectories);
-  const classes = analysis.symbols.filter((s) => s.kind === "class").length;
-  const functions = analysis.symbols.filter(
-    (s) => s.kind === "function"
-  ).length;
-  const methods = analysis.symbols.filter((s) => s.kind === "method").length;
-  const interfaces = analysis.symbols.filter(
-    (s) => s.kind === "interface"
-  ).length;
-  const types = analysis.symbols.filter((s) => s.kind === "type").length;
-  const enums = analysis.symbols.filter((s) => s.kind === "enum").length;
-  const imports = analysis.symbols.filter((s) => s.kind === "import").length;
-  const exportsCount = analysis.symbols.filter(
-    (s) => s.kind === "export"
-  ).length;
-  console.log("TS Files         :", analysis.files.length);
-  console.log("Symbols          :", analysis.symbols.length);
-  console.log("Classes          :", classes);
-  console.log("Interfaces       :", interfaces);
-  console.log("Enums            :", enums);
-  console.log("Types            :", types);
-  console.log("Functions        :", functions);
-  console.log("Methods          :", methods);
-  console.log("Imports          :", imports);
-  console.log("Exports          :", exportsCount);
-  console.log("Relationships    :", analysis.relationships.length);
-  console.log("Function Calls   :", analysis.callGraph.length);
-  const controllerCount = analysis.components.filter(
-    (component) => component.type === "Controller"
-  ).length;
-  const serviceCount = analysis.components.filter(
-    (component) => component.type === "Service"
-  ).length;
-  const moduleCount = analysis.components.filter(
-    (component) => component.type === "Module"
-  ).length;
-  const repositoryCount = analysis.components.filter(
-    (component) => component.type === "Repository"
-  ).length;
-  const entityCount = analysis.components.filter(
-    (component) => component.type === "Entity"
-  ).length;
-  console.log("Components       :", analysis.components.length);
-  console.log("Controllers      :", controllerCount);
-  console.log("Services         :", serviceCount);
-  console.log("Modules          :", moduleCount);
-  console.log("Repositories     :", repositoryCount);
-  console.log("Entities         :", entityCount);
-  console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
-  console.log();
+  try {
+    console.log("[inspect] assigning snapshot and analysis");
+    const snapshot = snapshotResult.data;
+    console.log("[inspect] snapshot assigned");
+    const analysis = analysisResult.data;
+    console.log("[inspect] analysis assigned");
+    console.log("[inspect] rendering report");
+    console.log();
+    console.log(pc.cyan("Engineering Intelligence Platform"));
+    console.log("--------------------------------------");
+    console.log("Repository       :", snapshot.name);
+    console.log("Path             :", snapshot.rootPath);
+    console.log("Languages        :", snapshot.languages.join(", "));
+    console.log("Framework        :", snapshot.framework ?? "-");
+    console.log("Package Manager  :", snapshot.packageManager ?? "-");
+    console.log("Git              :", snapshot.hasGit ? "Yes" : "No");
+    console.log("Files            :", snapshot.totalFiles);
+    console.log("Directories      :", snapshot.totalDirectories);
+    const classes = analysis.symbols.filter((s) => s.kind === "class").length;
+    const functions = analysis.symbols.filter(
+      (s) => s.kind === "function"
+    ).length;
+    const methods = analysis.symbols.filter((s) => s.kind === "method").length;
+    const interfaces = analysis.symbols.filter(
+      (s) => s.kind === "interface"
+    ).length;
+    const types = analysis.symbols.filter((s) => s.kind === "type").length;
+    const enums = analysis.symbols.filter((s) => s.kind === "enum").length;
+    const imports = analysis.symbols.filter((s) => s.kind === "import").length;
+    const exportsCount = analysis.symbols.filter(
+      (s) => s.kind === "export"
+    ).length;
+    console.log("TS Files         :", analysis.files.length);
+    console.log("Symbols          :", analysis.symbols.length);
+    console.log("Classes          :", classes);
+    console.log("Interfaces       :", interfaces);
+    console.log("Enums            :", enums);
+    console.log("Types            :", types);
+    console.log("Functions        :", functions);
+    console.log("Methods          :", methods);
+    console.log("Imports          :", imports);
+    console.log("Exports          :", exportsCount);
+    console.log("Relationships    :", analysis.relationships.length);
+    console.log("Function Calls   :", analysis.callGraph.length);
+    const controllerCount = analysis.components.filter(
+      (component) => component.type === "Controller"
+    ).length;
+    const serviceCount = analysis.components.filter(
+      (component) => component.type === "Service"
+    ).length;
+    const moduleCount = analysis.components.filter(
+      (component) => component.type === "Module"
+    ).length;
+    const repositoryCount = analysis.components.filter(
+      (component) => component.type === "Repository"
+    ).length;
+    const entityCount = analysis.components.filter(
+      (component) => component.type === "Entity"
+    ).length;
+    console.log("Components       :", analysis.components.length);
+    console.log("Controllers      :", controllerCount);
+    console.log("Services         :", serviceCount);
+    console.log("Modules          :", moduleCount);
+    console.log("Repositories     :", repositoryCount);
+    console.log("Entities         :", entityCount);
+    console.log("Scan Time        :", formatDuration(snapshot.scanDurationMs));
+    console.log();
+  } catch (error) {
+    console.error("[inspect] report rendering failed");
+    console.error(error);
+    if (error instanceof Error) {
+      console.error(error.stack);
+    }
+    throw error;
+  }
 }
 
 // src/commands/query.ts
@@ -396,11 +427,11 @@ async function context(repo, query2) {
     console.error(repoResult.error);
     return;
   }
-  const contextPackage = await generate(repoResult.data, query2);
+  const contextPackage = await generate(repoResult.data, query2, repo);
   console.log("================================");
   console.log("Confidence");
   console.log(contextPackage.context.confidence.level);
-  console.log(contextPackage.context.confidence.score.toFixed(2));
+  console.log(`${Math.round(contextPackage.context.confidence.score)}%`);
   console.log(contextPackage.context.confidence.reason);
   if (contextPackage.context.confidence.suggestions.length > 0) {
     console.log("Suggestions");
@@ -419,12 +450,26 @@ async function context(repo, query2) {
   console.log("================================");
   console.log();
   console.log("Selected Files");
-  console.table(contextPackage.context.budget);
+  console.table(
+    contextPackage.context.budget.map((item) => ({
+      file: item.path,
+      score: item.score,
+      reasons: item.reasons.join(", ")
+    }))
+  );
   console.log();
   console.log("Prompt");
   console.log(contextPackage.context.prompt);
   console.log();
+  console.log("Prompt Tokens");
+  console.log(contextPackage.context.promptTokens);
+  console.log();
   console.log("Answer");
+  const generationError = "error" in contextPackage ? contextPackage.error : void 0;
+  if (generationError) {
+    console.error("Generation failed:", generationError.message);
+    return;
+  }
   console.log(contextPackage.generation?.text ?? contextPackage.answer);
 }
 
@@ -460,6 +505,9 @@ var program = new Command();
 program.name("eip");
 program.version("0.0.1");
 program.command("inspect").argument("[path]", ".", "Repository Path").action((targetPath) => {
+  void inspect(targetPath);
+});
+program.command("scan").argument("[path]", ".", "Repository Path").description("Alias for inspect").action((targetPath) => {
   void inspect(targetPath);
 });
 program.command("graph").argument("[path]", ".", "Repository").action((targetPath) => {
@@ -514,4 +562,17 @@ program.command("context").argument("<repo>").argument("<query>").action((repo, 
 program.command("evaluate").argument("<repo>").action((repo) => {
   void evaluate(repo);
 });
-program.parse();
+(async () => {
+  try {
+    await program.parseAsync(process.argv);
+  } catch (error) {
+    console.error("===== FULL ERROR =====");
+    if (error instanceof Error) {
+      console.error(error.stack ?? error.message);
+    } else {
+      console.error(error);
+    }
+    console.error("======================");
+    process.exitCode = 1;
+  }
+})();

@@ -115,20 +115,20 @@ function buildMasterWalker(tree, file) {
         add(
           parsed,
           "variable",
-          node.text.substring(0, 40),
+          node.text?.substring(0, 40) ?? "anonymous",
           file,
           node.startPosition.row + 1
         );
         break;
       case "import_statement":
-        add(parsed, "import", node.text, file, node.startPosition.row + 1);
+        add(parsed, "import", node.text ?? "import", file, node.startPosition.row + 1);
         break;
       case "export_statement":
-        add(parsed, "export", node.text, file, node.startPosition.row + 1);
+        add(parsed, "export", node.text ?? "export", file, node.startPosition.row + 1);
         break;
       case "call_expression": {
         const fn = node.childForFieldName("function");
-        if (fn) {
+        if (fn?.text) {
           add(parsed, "function", fn.text, file, node.startPosition.row + 1);
         }
         break;
@@ -160,13 +160,35 @@ function createProgram(rootNames) {
 
 // src/component/decoratorExtractor.ts
 import ts2 from "typescript";
+function getDecoratorName(expression) {
+  const target = ts2.isCallExpression(expression) ? expression.expression : expression;
+  if (ts2.isIdentifier(target)) {
+    return target.escapedText?.toString();
+  }
+  if (ts2.isPropertyAccessExpression(target)) {
+    return target.name.escapedText?.toString();
+  }
+  return void 0;
+}
 function hasDecorator(node, name) {
   const decorators = ts2.getDecorators(node);
+  console.log(
+    "CLASS:",
+    node.name?.text,
+    "DECORATORS:",
+    decorators?.map((d) => {
+      try {
+        return d.getText();
+      } catch {
+        return "<unknown>";
+      }
+    })
+  );
   if (!decorators) return false;
   return decorators.some((decorator) => {
-    const expression = decorator.expression;
-    const target = ts2.isCallExpression(expression) ? expression.expression : expression;
-    return target.getText() === name || target.getText().endsWith(`.${name}`);
+    const decoratorName = getDecoratorName(decorator.expression);
+    if (!decoratorName) return false;
+    return decoratorName === name || decoratorName.endsWith(`.${name}`);
   });
 }
 function extractDecoratorComponents(source) {
@@ -205,7 +227,7 @@ function buildCallGraph(tree, file) {
     }
     if (node.type === "call_expression") {
       const fn = node.childForFieldName("function");
-      if (fn) {
+      if (fn?.text) {
         calls.push({
           caller: currentFunction,
           callee: fn.text,
@@ -362,7 +384,12 @@ async function analyzeRepository(root) {
     const decoratorComponents = [];
     for (const source of program.getSourceFiles()) {
       if (!source.fileName.startsWith(root)) continue;
-      decoratorComponents.push(...extractDecoratorComponents(source));
+      try {
+        decoratorComponents.push(...extractDecoratorComponents(source));
+      } catch (error) {
+        console.error(`Decorator extraction failed for ${source.fileName}`);
+        console.error(error);
+      }
     }
     analysis.components = decoratorComponents;
     return ok(analysis);
