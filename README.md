@@ -1,8 +1,8 @@
-# Sclare — Engineering Intelligence Engine (EIP)
+# Taproot — Engineering Intelligence Engine (EIP)
 
-Deterministic repository analysis and context retrieval for AI coding assistants. Sclare builds a structural model of a TypeScript codebase, retrieves only the files relevant to a natural-language task, and assembles a token-budgeted prompt before any LLM is invoked.
+Deterministic repository analysis and context retrieval for AI coding assistants. Taproot builds a structural model of a TypeScript codebase, retrieves only the files relevant to a natural-language task, and assembles a token-budgeted prompt before any LLM is invoked.
 
-Most coding assistants dump the open file, nearby imports, or a semantic search top-k into the prompt. That wastes tokens, invites hallucinated edits in unrelated files, and gives you no way to measure whether the context was actually right. Sclare answers a narrower, more useful question: **given a task description, which files should the model see?**
+Most coding assistants dump the open file, nearby imports, or a semantic search top-k into the prompt. That wastes tokens, invites hallucinated edits in unrelated files, and gives you no way to measure whether the context was actually right. Taproot answers a narrower, more useful question: **given a task description, which files should the model see?**
 
 ---
 
@@ -18,7 +18,7 @@ When an AI assistant receives too much repository context:
 
 ## Solution
 
-Sclare runs a fixed pipeline before any LLM call:
+Taproot runs a fixed pipeline before any LLM call:
 
 ```mermaid
 flowchart TD
@@ -102,7 +102,7 @@ Commits are filtered with `commitFilter.ts` — merges, formatting, lint, depend
 
 Run with `eip evaluate <repo>` after `pnpm build`.
 
-#### Sclare (self-eval, 31 commits, last 30 scanned)
+#### Taproot (self-eval, 31 commits, last 30 scanned)
 
 | Commits evaluated | Precision | Recall | F1 |
 |-------------------|-----------|--------|-----|
