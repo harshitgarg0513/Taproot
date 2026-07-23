@@ -1,4 +1,4 @@
-import { buildRepositoryModel } from "@eip/core";
+import { buildRepositoryModel } from "@taproot/core";
 
 export async function entities(repo: string) {
   const result = await buildRepositoryModel(repo);

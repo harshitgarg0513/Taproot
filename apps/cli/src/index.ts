@@ -23,7 +23,7 @@ import { evaluate as evaluateCommand } from "./commands/evaluate.js";
 
 const program = new Command();
 
-program.name("eip");
+program.name("taproot");
 program.version("0.0.1");
 
 program

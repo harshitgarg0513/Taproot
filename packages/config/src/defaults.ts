@@ -1,6 +1,6 @@
-import { EipConfig } from "./types.js";
+import { TaprootConfig } from "./types.js";
 
-export const defaultConfig: EipConfig = {
+export const defaultConfig: TaprootConfig = {
   ignore: ["node_modules", ".git", "dist", "coverage", ".next", ".turbo"],
   languages: ["typescript"],
   cache: true,

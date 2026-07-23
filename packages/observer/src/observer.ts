@@ -4,7 +4,7 @@ import path from "path";
 import { scanRepository } from "./scanner.js";
 import { detectProject } from "./detector.js";
 import { RepositorySnapshot } from "./types.js";
-import { RepositoryNotFoundError, Result, err, ok } from "@eip/shared";
+import { RepositoryNotFoundError, Result, err, ok } from "@taproot/shared";
 
 export async function observeRepository(
   root: string,

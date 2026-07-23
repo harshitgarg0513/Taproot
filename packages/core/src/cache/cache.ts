@@ -9,7 +9,7 @@ interface CacheEntry {
 }
 
 function getCacheFilePath() {
-  return path.resolve(process.cwd(), ".eip-cache.json");
+  return path.resolve(process.cwd(), ".taproot-cache.json");
 }
 
 function readCache(): Map<string, CacheEntry> {

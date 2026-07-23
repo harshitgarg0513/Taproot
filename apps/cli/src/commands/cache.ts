@@ -1,4 +1,4 @@
-import { cacheSize, clearCache } from "@eip/core";
+import { cacheSize, clearCache } from "@taproot/core";
 
 export async function cache(action: string) {
   switch (action) {

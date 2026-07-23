@@ -2,6 +2,8 @@
 .env
 .eip-cache.json
 **/.eip-cache.json
+.taproot-cache.json
+**/.taproot-cache.json
 .eval-repos/
 node_modules/
 dist/

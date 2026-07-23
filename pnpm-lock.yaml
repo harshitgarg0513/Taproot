@@ -69,22 +69,22 @@ importers:
 
   apps/cli:
     dependencies:
-      '@eip/analyzer':
+      '@taproot/analyzer':
         specifier: workspace:*
         version: link:../../packages/analyzer
-      '@eip/anthropic':
+      '@taproot/anthropic':
         specifier: workspace:*
         version: link:../../packages/providers/anthropic
-      '@eip/config':
+      '@taproot/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@eip/core':
+      '@taproot/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@eip/observer':
+      '@taproot/observer':
         specifier: workspace:*
         version: link:../../packages/observer
-      '@eip/shared':
+      '@taproot/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       commander:
@@ -96,7 +96,7 @@ importers:
 
   apps/vscode:
     dependencies:
-      '@eip/core':
+      '@taproot/core':
         specifier: workspace:*
         version: link:../../packages/core
       vscode:
@@ -112,7 +112,7 @@ importers:
 
   packages/analyzer:
     dependencies:
-      '@eip/shared':
+      '@taproot/shared':
         specifier: workspace:*
         version: link:../shared
       fast-glob:
@@ -139,31 +139,31 @@ importers:
 
   packages/core:
     dependencies:
-      '@eip/analyzer':
+      '@taproot/analyzer':
         specifier: workspace:*
         version: link:../analyzer
-      '@eip/anthropic':
+      '@taproot/anthropic':
         specifier: workspace:*
         version: link:../providers/anthropic
-      '@eip/config':
+      '@taproot/config':
         specifier: workspace:*
         version: link:../config
-      '@eip/gemini':
+      '@taproot/gemini':
         specifier: workspace:*
         version: link:../providers/gemini
-      '@eip/observer':
+      '@taproot/observer':
         specifier: workspace:*
         version: link:../observer
-      '@eip/shared':
+      '@taproot/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/observer:
     dependencies:
-      '@eip/config':
+      '@taproot/config':
         specifier: workspace:*
         version: link:../config
-      '@eip/shared':
+      '@taproot/shared':
         specifier: workspace:*
         version: link:../shared
       fs-extra:

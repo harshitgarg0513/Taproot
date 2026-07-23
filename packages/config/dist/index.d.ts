@@ -1,4 +1,4 @@
-interface EipConfig {
+interface TaprootConfig {
     ignore: string[];
     languages: string[];
     cache: boolean;
@@ -10,8 +10,8 @@ interface EipConfig {
     };
 }
 
-declare function loadConfig(repo: string): Promise<EipConfig>;
+declare function loadConfig(repo: string): Promise<TaprootConfig>;
 
-declare const defaultConfig: EipConfig;
+declare const defaultConfig: TaprootConfig;
 
-export { type EipConfig, defaultConfig, loadConfig };
+export { type TaprootConfig, defaultConfig, loadConfig };

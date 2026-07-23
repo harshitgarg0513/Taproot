@@ -1,4 +1,4 @@
-import { analyzeRepository } from "@eip/analyzer";
+import { analyzeRepository } from "@taproot/analyzer";
 
 export async function components(repo: string) {
   const analysisResult = await analyzeRepository(repo);

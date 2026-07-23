@@ -1,4 +1,4 @@
-import { buildRepositoryModel, analyzeImpact } from "@eip/core";
+import { buildRepositoryModel, analyzeImpact } from "@taproot/core";
 
 export async function impact(repo: string, file: string) {
   const modelResult = await buildRepositoryModel(repo);

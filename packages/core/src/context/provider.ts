@@ -1,5 +1,5 @@
-import { complete as completeWithAnthropic } from "@eip/anthropic";
-import { complete as completeWithGemini } from "@eip/gemini";
+import { complete as completeWithAnthropic } from "@taproot/anthropic";
+import { complete as completeWithGemini } from "@taproot/gemini";
 
 export interface GenerationResult {
   provider: string;

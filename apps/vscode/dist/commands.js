@@ -38,7 +38,7 @@ const vscode = __importStar(require("vscode"));
 const panel_1 = require("./panel");
 const service_1 = require("./service");
 function registerCommands(context) {
-    context.subscriptions.push(vscode.commands.registerCommand("eip.context", async () => {
+    context.subscriptions.push(vscode.commands.registerCommand("taproot.context", async () => {
         const query = await vscode.window.showInputBox({
             prompt: "What do you want to implement?",
         });

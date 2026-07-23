@@ -1,4 +1,4 @@
-import { buildKnowledge } from "@eip/core";
+import { buildKnowledge } from "@taproot/core";
 
 export async function knowledge(repo: string) {
   const graphResult = await buildKnowledge(repo);

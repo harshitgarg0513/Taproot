@@ -1,6 +1,6 @@
-# Taproot — Engineering Intelligence Engine (EIP)
+# Taproot — Engineering Intelligence Engine
 
-Deterministic repository analysis and context retrieval for AI coding assistants. Taproot builds a structural model of a TypeScript codebase, retrieves only the files relevant to a natural-language task, and assembles a token-budgeted prompt before any LLM is invoked.
+Determinism-first repository analysis and context retrieval for AI coding assistants. Taproot builds a structural model of a TypeScript codebase, retrieves only the files relevant to a natural-language task, and assembles a token-budgeted prompt before any LLM is invoked.
 
 Most coding assistants dump the open file, nearby imports, or a semantic search top-k into the prompt. That wastes tokens, invites hallucinated edits in unrelated files, and gives you no way to measure whether the context was actually right. Taproot answers a narrower, more useful question: **given a task description, which files should the model see?**
 
@@ -82,7 +82,7 @@ GEMINI_API_KEY=...
 
 ## VS Code extension
 
-The `eip-vscode` extension exposes **Engineering Context** as a command palette action. It runs the same `buildContext` pipeline and renders selected files, confidence score, and the assembled prompt in a webview panel.
+The `taproot-vscode` extension exposes **Engineering Context** as a command palette action. It runs the same `buildContext` pipeline and renders selected files, confidence score, and the assembled prompt in a webview panel.
 
 ---
 
@@ -98,21 +98,29 @@ Evaluation measures how well the **final budget output** (post-`rankContext` / `
 
 Commits are filtered with `commitFilter.ts` — merges, formatting, lint, dependency bumps, and large diffs (>20 files) are excluded so scores reflect feature/fix work.
 
-### Results (July 2026)
+### Empirical Benchmark Results
 
-Run with `eip evaluate <repo>` after `pnpm build`.
+Run with `taproot evaluate <repo>` (or `node apps/cli/dist/index.js evaluate <repo>`) after `pnpm build`.
 
-#### Taproot (self-eval, 31 commits, last 30 scanned)
+#### Taproot Repository (Self-Evaluation Benchmark)
 
 | Commits evaluated | Precision | Recall | F1 |
 |-------------------|-----------|--------|-----|
-| 6 | **0.51** | **0.46** | **0.47** |
+| 7 | **0.46** | **0.41** | **0.42** |
 
-Evaluated commits include `feat(retrieval): implement deterministic seed retrieval engine`, `feat(context): implement context optimization engine`, `feat(evaluation): evaluate retrieval using git history`, and similar feature work where commit messages name the subsystem being changed.
+Evaluated commits include `feat(retrieval): implement deterministic seed retrieval engine`, `feat(context): implement context optimization engine`, `feat(evaluation): evaluate retrieval using git history`, and similar conventional feature work where commit messages name the targeted subsystems.
 
-#### BeatRoute NestJS monorepo (enterprise snapshot)
+#### tRPC Monorepo Benchmark (`trpc/trpc`)
 
-The BeatRoute microservice boilerplate (`boilerplate-ms-main`, 121 TypeScript files, 1,549 symbols, 65 NestJS components) was used throughout development for live retrieval testing. The local snapshot has **no git history**, so commit-based metrics cannot be computed from it. Point `eip evaluate` at any git-backed NestJS monorepo to reproduce.
+| Commits evaluated | Precision | Recall | F1 |
+|-------------------|-----------|--------|-----|
+| 19 | **0.06** | **0.14** | **0.07** |
+
+#### Zustand State Engine Benchmark (`pmndrs/zustand`)
+
+| Commits evaluated | Precision | Recall | F1 |
+|-------------------|-----------|--------|-----|
+| 29 | **0.00** | **0.02** | **0.01** |
 
 ---
 
@@ -126,7 +134,7 @@ packages/
   config/      Per-repo configuration
   providers/   LLM adapters (Anthropic, Gemini)
 apps/
-  cli/         `eip` command-line tool
+  cli/         `taproot` command-line tool
   vscode/      VS Code extension
 ```
 
@@ -135,7 +143,7 @@ Key design choices:
 - **Deterministic retrieval** — same query + same repo always yields the same file set; no embedding drift
 - **Graph expansion** — seed matches propagate along import and call edges
 - **Confidence gating** — LOW-confidence queries are rejected before an LLM is called
-- **Disk cache** — analyzed models persist in `.eip-cache.json` (gitignored)
+- **Disk cache** — analyzed models persist in `.taproot-cache.json` (gitignored)
 
 ---
 

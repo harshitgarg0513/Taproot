@@ -10,7 +10,7 @@ import { buildCallGraph } from "./graph/callGraph.js";
 import { extractEntities } from "./entity/extractor.js";
 import { classifyEntity } from "./classifier/classifier.js";
 import { Component, RepositoryAnalysis } from "./types.js";
-import { Result, err, ok } from "@eip/shared";
+import { Result, err, ok } from "@taproot/shared";
 
 export async function analyzeRepository(
   root: string,

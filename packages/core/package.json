@@ -1,5 +1,5 @@
 {
-  "name": "@eip/core",
+  "name": "@taproot/core",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,11 +8,11 @@
     "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
-    "@eip/anthropic": "workspace:*",
-    "@eip/analyzer": "workspace:*",
-    "@eip/config": "workspace:*",
-    "@eip/gemini": "workspace:*",
-    "@eip/observer": "workspace:*",
-    "@eip/shared": "workspace:*"
+    "@taproot/anthropic": "workspace:*",
+    "@taproot/analyzer": "workspace:*",
+    "@taproot/config": "workspace:*",
+    "@taproot/gemini": "workspace:*",
+    "@taproot/observer": "workspace:*",
+    "@taproot/shared": "workspace:*"
   }
 }

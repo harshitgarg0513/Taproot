@@ -1,4 +1,4 @@
-import { Result } from '@eip/shared';
+import { Result } from '@taproot/shared';
 
 interface RepositorySnapshot {
     name: string;

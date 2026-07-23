@@ -7,7 +7,7 @@ import { loadConfig } from "../src/loader.js";
 
 describe("loadConfig", () => {
   it("returns defaults when no config file exists", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "eip-config-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "taproot-config-"));
     const config = await loadConfig(dir);
 
     expect(config.ignore).toContain("node_modules");
@@ -15,8 +15,8 @@ describe("loadConfig", () => {
   });
 
   it("throws on invalid config", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "eip-config-"));
-    await fs.writeJson(path.join(dir, "eip.config.json"), {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "taproot-config-"));
+    await fs.writeJson(path.join(dir, "taproot.config.json"), {
       cache: "yes",
     });
 
@@ -24,8 +24,8 @@ describe("loadConfig", () => {
   });
 
   it("loads a valid config file", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "eip-config-"));
-    await fs.writeJson(path.join(dir, "eip.config.json"), {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "taproot-config-"));
+    await fs.writeJson(path.join(dir, "taproot.config.json"), {
       ignore: ["coverage"],
       languages: ["typescript"],
       cache: true,
@@ -44,8 +44,8 @@ describe("loadConfig", () => {
   });
 
   it("merges defaults with provided values", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "eip-config-"));
-    await fs.writeJson(path.join(dir, "eip.config.json"), {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "taproot-config-"));
+    await fs.writeJson(path.join(dir, "taproot.config.json"), {
       ignore: ["coverage"],
     });
 

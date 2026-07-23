@@ -1,4 +1,4 @@
-import { buildRepositoryModel, generate } from "@eip/core";
+import { buildRepositoryModel, generate } from "@taproot/core";
 
 export async function context(repo: string, query: string) {
   const repoResult = await buildRepositoryModel(repo);

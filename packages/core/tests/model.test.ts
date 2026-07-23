@@ -11,7 +11,7 @@ describe("repository model", () => {
   });
 
   it("rehydrates cached models without persisting runtime maps", () => {
-    const cacheFile = path.resolve(process.cwd(), ".eip-cache.json");
+    const cacheFile = path.resolve(process.cwd(), ".taproot-cache.json");
     fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
     clearCache();
 

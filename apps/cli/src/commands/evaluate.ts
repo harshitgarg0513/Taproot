@@ -5,7 +5,7 @@ import {
   getCommitHistory,
   printReport,
   shouldEvaluate,
-} from "@eip/core";
+} from "@taproot/core";
 
 export async function evaluate(repo: string) {
   const result = await buildRepositoryModel(repo);

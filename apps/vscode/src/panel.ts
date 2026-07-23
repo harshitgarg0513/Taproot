@@ -28,7 +28,7 @@ type EngineeringContextResult =
 
 export function render(result: EngineeringContextResult) {
   const panel = vscode.window.createWebviewPanel(
-    "eip",
+    "taproot",
     "Engineering Context",
     vscode.ViewColumn.Two,
     {

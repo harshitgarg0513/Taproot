@@ -1,4 +1,4 @@
 
-> eip-vscode@0.0.1 build /Users/harshitgarg/Documents/pro/sclare/apps/vscode
+> taproot-vscode@0.0.1 build /Users/harshitgarg/Documents/pro/sclare 2/apps/vscode
 > tsc -p tsconfig.json
 

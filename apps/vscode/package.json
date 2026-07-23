@@ -1,19 +1,19 @@
 {
-  "name": "eip-vscode",
-  "displayName": "EIP Context",
+  "name": "taproot-vscode",
+  "displayName": "Taproot Context",
   "version": "0.0.1",
-  "publisher": "eip",
+  "publisher": "taproot",
   "engines": {
     "vscode": "^1.90.0"
   },
   "activationEvents": [
-    "onCommand:eip.context"
+    "onCommand:taproot.context"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "eip.context",
+        "command": "taproot.context",
         "title": "Engineering Context"
       }
     ]
@@ -26,7 +26,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@eip/core": "workspace:*",
+    "@taproot/core": "workspace:*",
     "vscode": "^1.1.37"
   }
 }

@@ -1,4 +1,4 @@
-import { loadConfig } from "@eip/config";
+import { loadConfig } from "@taproot/config";
 
 export async function config(repo: string) {
   const cfg = await loadConfig(repo);

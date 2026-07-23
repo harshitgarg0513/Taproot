@@ -1,10 +1,10 @@
 import path from "node:path";
-import { analyzeRepository } from "@eip/analyzer";
-import { loadConfig } from "@eip/config";
-import { observeRepository } from "@eip/observer";
+import { analyzeRepository } from "@taproot/analyzer";
+import { loadConfig } from "@taproot/config";
+import { observeRepository } from "@taproot/observer";
 
 import { RepositoryModel } from "./types.js";
-import { Result, err, ok } from "@eip/shared";
+import { Result, err, ok } from "@taproot/shared";
 import {
   createCacheKey,
   getCachedModel,

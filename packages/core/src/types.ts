@@ -1,11 +1,11 @@
-import type { EipConfig } from "@eip/config";
-import type { ClassifiedEntity, Entity } from "@eip/analyzer";
+import type { TaprootConfig } from "@taproot/config";
+import type { ClassifiedEntity, Entity } from "@taproot/analyzer";
 import { BuildMetrics } from "./performance/index.js";
 
-export type { ClassifiedEntity, Entity } from "@eip/analyzer";
+export type { ClassifiedEntity, Entity } from "@taproot/analyzer";
 
 export interface CachedRepositoryModel {
-  config: EipConfig;
+  config: TaprootConfig;
   metrics: BuildMetrics;
   knowledgeGraph: KnowledgeGraph;
   components: Array<{

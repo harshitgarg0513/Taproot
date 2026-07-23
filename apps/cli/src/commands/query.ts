@@ -1,4 +1,4 @@
-import { buildRepositoryModel, findComponent, findSymbol } from "@eip/core";
+import { buildRepositoryModel, findComponent, findSymbol } from "@taproot/core";
 
 export async function query(repo: string, type: string, value: string) {
   const modelResult = await buildRepositoryModel(repo);

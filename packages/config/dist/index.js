@@ -31,7 +31,7 @@ var ConfigSchema = z.object({
 
 // src/loader.ts
 async function loadConfig(repo) {
-  const file = path.join(repo, "eip.config.json");
+  const file = path.join(repo, "taproot.config.json");
   if (!await fs.pathExists(file)) {
     return defaultConfig;
   }

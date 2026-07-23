@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runQuery = runQuery;
-const core_1 = require("@eip/core");
+const core_1 = require("@taproot/core");
 const vscode = __importStar(require("vscode"));
 async function runQuery(query) {
     const workspace = vscode.workspace.workspaceFolders?.[0];

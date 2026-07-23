@@ -1,4 +1,4 @@
-import { buildRepositoryModel, retrieve } from "@eip/core";
+import { buildRepositoryModel, retrieve } from "@taproot/core";
 
 export async function retrieval(repo: string, query: string) {
   const result = await buildRepositoryModel(repo);

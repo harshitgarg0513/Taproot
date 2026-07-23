@@ -5,7 +5,7 @@ import { defaultConfig } from "./defaults.js";
 import { ConfigSchema } from "./schema.js";
 
 export async function loadConfig(repo: string) {
-  const file = path.join(repo, "eip.config.json");
+  const file = path.join(repo, "taproot.config.json");
 
   if (!(await fs.pathExists(file))) {
     return defaultConfig;

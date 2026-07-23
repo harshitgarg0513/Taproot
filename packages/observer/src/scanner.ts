@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
-import { loadConfig } from "@eip/config";
+import { loadConfig } from "@taproot/config";
 import { ScanResult } from "./types.js";
 
 export async function scanRepository(root: string): Promise<ScanResult> {

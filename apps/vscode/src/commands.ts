@@ -5,7 +5,7 @@ import { runQuery } from "./service";
 
 export function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
-    vscode.commands.registerCommand("eip.context", async () => {
+    vscode.commands.registerCommand("taproot.context", async () => {
       const query = await vscode.window.showInputBox({
         prompt: "What do you want to implement?",
       });

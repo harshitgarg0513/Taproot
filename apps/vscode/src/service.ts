@@ -1,4 +1,4 @@
-import { buildRepositoryModel, generate } from "@eip/core";
+import { buildRepositoryModel, generate } from "@taproot/core";
 
 import * as vscode from "vscode";
 

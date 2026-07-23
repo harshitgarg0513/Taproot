@@ -1,5 +1,5 @@
 {
-  "name": "eip",
+  "name": "taproot",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {

@@ -1,5 +1,5 @@
 import { RepositoryModel } from "../types.js";
-import { Result, ok } from "@eip/shared";
+import { Result, ok } from "@taproot/shared";
 
 export interface ImpactResult {
   changedFile: string;

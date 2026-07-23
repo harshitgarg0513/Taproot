@@ -1,15 +1,15 @@
 // src/builder.ts
 import path3 from "path";
-import { analyzeRepository } from "@eip/analyzer";
-import { loadConfig } from "@eip/config";
-import { observeRepository } from "@eip/observer";
-import { err, ok } from "@eip/shared";
+import { analyzeRepository } from "@taproot/analyzer";
+import { loadConfig } from "@taproot/config";
+import { observeRepository } from "@taproot/observer";
+import { err, ok } from "@taproot/shared";
 
 // src/cache/cache.ts
 import fs from "fs";
 import path from "path";
 function getCacheFilePath() {
-  return path.resolve(process.cwd(), ".eip-cache.json");
+  return path.resolve(process.cwd(), ".taproot-cache.json");
 }
 function readCache() {
   const cacheFile = getCacheFilePath();
@@ -297,7 +297,7 @@ function impactedFiles(model, file) {
 }
 
 // src/query/impactAnalyzer.ts
-import { ok as ok2 } from "@eip/shared";
+import { ok as ok2 } from "@taproot/shared";
 function analyzeImpact(model, changedFile) {
   const impactedFiles2 = /* @__PURE__ */ new Set();
   const impactedComponents = /* @__PURE__ */ new Set();
@@ -331,7 +331,7 @@ function analyzeImpact(model, changedFile) {
 }
 
 // src/query/search.ts
-import { matches, ok as ok3 } from "@eip/shared";
+import { matches, ok as ok3 } from "@taproot/shared";
 function searchRepository(model, query) {
   const components = model.components.filter(
     (component) => matches(query, component.name) || matches(query, component.file)
@@ -353,7 +353,7 @@ function searchRepository(model, query) {
 }
 
 // src/knowledge/builder.ts
-import { err as err2, ok as ok4 } from "@eip/shared";
+import { err as err2, ok as ok4 } from "@taproot/shared";
 async function buildKnowledge(repo) {
   const modelResult = await buildRepositoryModel(repo);
   if (!modelResult.success) {
@@ -363,7 +363,7 @@ async function buildKnowledge(repo) {
 }
 
 // src/reasoning/explainBuilder.ts
-import { matches as matches2 } from "@eip/shared";
+import { matches as matches2 } from "@taproot/shared";
 
 // src/reasoning/dependencyReasoner.ts
 function buildDependencySummary(model, file) {
@@ -468,7 +468,7 @@ function printExplain(e) {
 }
 
 // src/reasoning/risk.ts
-import { matches as matches3 } from "@eip/shared";
+import { matches as matches3 } from "@taproot/shared";
 function analyzeRisk(model, target) {
   const seedFiles = /* @__PURE__ */ new Set();
   for (const component of model.components) {
@@ -914,8 +914,8 @@ async function buildPrompt(repo, query, items) {
 }
 
 // src/context/provider.ts
-import { complete as completeWithAnthropic } from "@eip/anthropic";
-import { complete as completeWithGemini } from "@eip/gemini";
+import { complete as completeWithAnthropic } from "@taproot/anthropic";
+import { complete as completeWithGemini } from "@taproot/gemini";
 function hasAnthropicKey() {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   return Boolean(apiKey && apiKey !== "YOUR_KEY");

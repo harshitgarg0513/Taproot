@@ -4,7 +4,7 @@
 import { Command } from "commander";
 
 // src/commands/calls.ts
-import { analyzeRepository } from "@eip/analyzer";
+import { analyzeRepository } from "@taproot/analyzer";
 async function calls(repo) {
   const analysisResult = await analyzeRepository(repo);
   if (!analysisResult.success) {
@@ -21,7 +21,7 @@ async function calls(repo) {
 }
 
 // src/commands/components.ts
-import { analyzeRepository as analyzeRepository2 } from "@eip/analyzer";
+import { analyzeRepository as analyzeRepository2 } from "@taproot/analyzer";
 async function components(repo) {
   const analysisResult = await analyzeRepository2(repo);
   if (!analysisResult.success) {
@@ -43,7 +43,7 @@ async function components(repo) {
 }
 
 // src/commands/graph.ts
-import { analyzeRepository as analyzeRepository3 } from "@eip/analyzer";
+import { analyzeRepository as analyzeRepository3 } from "@taproot/analyzer";
 async function graph(repo) {
   const analysisResult = await analyzeRepository3(repo);
   if (!analysisResult.success) {
@@ -62,9 +62,9 @@ async function graph(repo) {
 
 // src/commands/inspect.ts
 import pc from "picocolors";
-import { analyzeRepository as analyzeRepository4 } from "@eip/analyzer";
-import { observeRepository } from "@eip/observer";
-import { formatDuration } from "@eip/shared";
+import { analyzeRepository as analyzeRepository4 } from "@taproot/analyzer";
+import { observeRepository } from "@taproot/observer";
+import { formatDuration } from "@taproot/shared";
 async function inspect(path) {
   let snapshotResult;
   let analysisResult;
@@ -172,7 +172,7 @@ async function inspect(path) {
 }
 
 // src/commands/query.ts
-import { buildRepositoryModel, findComponent, findSymbol } from "@eip/core";
+import { buildRepositoryModel, findComponent, findSymbol } from "@taproot/core";
 async function query(repo, type, value) {
   const modelResult = await buildRepositoryModel(repo);
   if (!modelResult.success) {
@@ -199,7 +199,7 @@ async function query(repo, type, value) {
 }
 
 // src/commands/model.ts
-import { buildRepositoryModel as buildRepositoryModel2 } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel2 } from "@taproot/core";
 async function model(path) {
   const modelResult = await buildRepositoryModel2(path);
   if (!modelResult.success) {
@@ -210,7 +210,7 @@ async function model(path) {
 }
 
 // src/commands/knowledge.ts
-import { buildKnowledge } from "@eip/core";
+import { buildKnowledge } from "@taproot/core";
 async function knowledge(repo) {
   const graphResult = await buildKnowledge(repo);
   if (!graphResult.success) {
@@ -226,7 +226,7 @@ async function knowledge(repo) {
 }
 
 // src/commands/impact.ts
-import { buildRepositoryModel as buildRepositoryModel3, analyzeImpact } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel3, analyzeImpact } from "@taproot/core";
 async function impact(repo, file) {
   const modelResult = await buildRepositoryModel3(repo);
   if (!modelResult.success) {
@@ -265,7 +265,7 @@ async function impact(repo, file) {
 }
 
 // src/commands/search.ts
-import { buildRepositoryModel as buildRepositoryModel4, searchRepository } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel4, searchRepository } from "@taproot/core";
 async function search(repo, query2) {
   const modelResult = await buildRepositoryModel4(repo);
   if (!modelResult.success) {
@@ -301,7 +301,7 @@ async function search(repo, query2) {
 }
 
 // src/commands/cache.ts
-import { cacheSize, clearCache } from "@eip/core";
+import { cacheSize, clearCache } from "@taproot/core";
 async function cache(action) {
   switch (action) {
     case "size":
@@ -317,7 +317,7 @@ async function cache(action) {
 }
 
 // src/commands/benchmark.ts
-import { buildRepositoryModel as buildRepositoryModel5 } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel5 } from "@taproot/core";
 async function benchmark(repo) {
   const start = performance.now();
   const result = await buildRepositoryModel5(repo);
@@ -338,7 +338,7 @@ async function benchmark(repo) {
 }
 
 // src/commands/classify.ts
-import { buildRepositoryModel as buildRepositoryModel6 } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel6 } from "@taproot/core";
 async function classify(repo) {
   const result = await buildRepositoryModel6(repo);
   if (!result.success) {
@@ -353,14 +353,14 @@ async function classify(repo) {
 }
 
 // src/commands/config.ts
-import { loadConfig } from "@eip/config";
+import { loadConfig } from "@taproot/config";
 async function config(repo) {
   const cfg = await loadConfig(repo);
   console.log(JSON.stringify(cfg, null, 2));
 }
 
 // src/commands/entities.ts
-import { buildRepositoryModel as buildRepositoryModel7 } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel7 } from "@taproot/core";
 async function entities(repo) {
   const result = await buildRepositoryModel7(repo);
   if (!result.success) {
@@ -371,7 +371,7 @@ async function entities(repo) {
 }
 
 // src/commands/explain.ts
-import { buildRepositoryModel as buildRepositoryModel8, explain, printExplain } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel8, explain, printExplain } from "@taproot/core";
 async function explainCommand(repo, entity) {
   const result = await buildRepositoryModel8(repo);
   if (!result.success) {
@@ -387,7 +387,7 @@ async function explainCommand(repo, entity) {
 }
 
 // src/commands/risk.ts
-import { analyzeRisk, buildRepositoryModel as buildRepositoryModel9, printRisk } from "@eip/core";
+import { analyzeRisk, buildRepositoryModel as buildRepositoryModel9, printRisk } from "@taproot/core";
 async function risk(repo, target) {
   const result = await buildRepositoryModel9(repo);
   if (!result.success) {
@@ -399,7 +399,7 @@ async function risk(repo, target) {
 }
 
 // src/commands/retrieve.ts
-import { buildRepositoryModel as buildRepositoryModel10, retrieve } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel10, retrieve } from "@taproot/core";
 async function retrieval(repo, query2) {
   const result = await buildRepositoryModel10(repo);
   if (!result.success) {
@@ -420,7 +420,7 @@ async function retrieval(repo, query2) {
 }
 
 // src/commands/context.ts
-import { buildRepositoryModel as buildRepositoryModel11, generate } from "@eip/core";
+import { buildRepositoryModel as buildRepositoryModel11, generate } from "@taproot/core";
 async function context(repo, query2) {
   const repoResult = await buildRepositoryModel11(repo);
   if (!repoResult.success) {
@@ -481,7 +481,7 @@ import {
   getCommitHistory,
   printReport,
   shouldEvaluate
-} from "@eip/core";
+} from "@taproot/core";
 async function evaluate(repo) {
   const result = await buildRepositoryModel12(repo);
   if (!result.success) {
@@ -502,7 +502,7 @@ async function evaluate(repo) {
 
 // src/index.ts
 var program = new Command();
-program.name("eip");
+program.name("taproot");
 program.version("0.0.1");
 program.command("inspect").argument("[path]", ".", "Repository Path").action((targetPath) => {
   void inspect(targetPath);

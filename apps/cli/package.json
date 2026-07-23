@@ -3,19 +3,19 @@
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "eip": "./dist/index.js"
+    "taproot": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsup src/index.ts --format esm --dts --clean"
   },
   "dependencies": {
-    "@eip/analyzer": "workspace:*",
-    "@eip/anthropic": "workspace:*",
-    "@eip/config": "workspace:*",
-    "@eip/core": "workspace:*",
-    "@eip/observer": "workspace:*",
-    "@eip/shared": "workspace:*",
+    "@taproot/analyzer": "workspace:*",
+    "@taproot/anthropic": "workspace:*",
+    "@taproot/config": "workspace:*",
+    "@taproot/core": "workspace:*",
+    "@taproot/observer": "workspace:*",
+    "@taproot/shared": "workspace:*",
     "commander": "^14.0.0",
     "picocolors": "^1.1.1"
   }

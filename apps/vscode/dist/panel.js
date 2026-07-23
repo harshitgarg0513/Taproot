@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.render = render;
 const vscode = __importStar(require("vscode"));
 function render(result) {
-    const panel = vscode.window.createWebviewPanel("eip", "Engineering Context", vscode.ViewColumn.Two, {
+    const panel = vscode.window.createWebviewPanel("taproot", "Engineering Context", vscode.ViewColumn.Two, {
         enableScripts: true,
     });
     const confidenceLevel = result.context.success ? result.context.retrieval.confidence.level : result.context.confidence.level;

@@ -1,5 +1,5 @@
 {
-  "name": "@eip/anthropic",
+  "name": "@taproot/anthropic",
   "version": "0.0.1",
   "type": "module",
   "main": "./index.ts",

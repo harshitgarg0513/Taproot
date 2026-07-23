@@ -351,7 +351,7 @@ function classifyEntity(entity) {
 }
 
 // src/analyzer.ts
-import { err, ok } from "@eip/shared";
+import { err, ok } from "@taproot/shared";
 async function analyzeRepository(root) {
   try {
     const files = await fg(["**/*.ts"], {

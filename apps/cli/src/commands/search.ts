@@ -1,4 +1,4 @@
-import { buildRepositoryModel, searchRepository } from "@eip/core";
+import { buildRepositoryModel, searchRepository } from "@taproot/core";
 
 export async function search(repo: string, query: string) {
   const modelResult = await buildRepositoryModel(repo);

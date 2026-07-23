@@ -1,5 +1,5 @@
 import { buildRepositoryModel } from "../builder.js";
-import { Result, err, ok } from "@eip/shared";
+import { Result, err, ok } from "@taproot/shared";
 import type { KnowledgeGraph } from "../types.js";
 
 export async function buildKnowledge(

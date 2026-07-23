@@ -1,4 +1,4 @@
-import { buildRepositoryModel, explain, printExplain } from "@eip/core";
+import { buildRepositoryModel, explain, printExplain } from "@taproot/core";
 
 export async function explainCommand(repo: string, entity: string) {
   const result = await buildRepositoryModel(repo);

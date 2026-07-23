@@ -1,5 +1,5 @@
 import { RepositoryModel } from "../types.js";
-import { Result, matches, ok } from "@eip/shared";
+import { Result, matches, ok } from "@taproot/shared";
 
 export interface SearchResult {
   components: RepositoryModel["components"];

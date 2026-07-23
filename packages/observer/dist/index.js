@@ -5,7 +5,7 @@ import path3 from "path";
 // src/scanner.ts
 import fs from "fs-extra";
 import path from "path";
-import { loadConfig } from "@eip/config";
+import { loadConfig } from "@taproot/config";
 async function scanRepository(root) {
   const config = await loadConfig(root);
   const IGNORE = new Set(config.ignore);
@@ -72,7 +72,7 @@ async function detectProject(root, extensions) {
 }
 
 // src/observer.ts
-import { RepositoryNotFoundError, err, ok } from "@eip/shared";
+import { RepositoryNotFoundError, err, ok } from "@taproot/shared";
 async function observeRepository(root) {
   const start = performance.now();
   if (!await fs3.pathExists(root)) {

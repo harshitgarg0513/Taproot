@@ -1,5 +1,5 @@
 import type { RepositoryModel } from "../types.js";
-import { matches } from "@eip/shared";
+import { matches } from "@taproot/shared";
 import { buildDependencySummary } from "./dependencyReasoner.js";
 import { inferResponsibility } from "./responsibility.js";
 

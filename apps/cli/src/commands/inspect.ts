@@ -1,7 +1,7 @@
 import pc from "picocolors";
-import { analyzeRepository } from "@eip/analyzer";
-import { observeRepository } from "@eip/observer";
-import { formatDuration } from "@eip/shared";
+import { analyzeRepository } from "@taproot/analyzer";
+import { observeRepository } from "@taproot/observer";
+import { formatDuration } from "@taproot/shared";
 
 export async function inspect(path: string) {
   let snapshotResult;

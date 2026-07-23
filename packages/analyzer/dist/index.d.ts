@@ -1,4 +1,4 @@
-import { Result } from '@eip/shared';
+import { Result } from '@taproot/shared';
 
 type SymbolKind = "class" | "function" | "method" | "interface" | "type" | "enum" | "variable" | "import" | "export";
 interface SymbolNode {

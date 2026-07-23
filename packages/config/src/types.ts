@@ -1,4 +1,4 @@
-export interface EipConfig {
+export interface TaprootConfig {
   ignore: string[];
   languages: string[];
   cache: boolean;

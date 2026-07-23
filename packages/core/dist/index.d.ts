@@ -1,8 +1,8 @@
-import { EipConfig } from '@eip/config';
-import * as _eip_analyzer from '@eip/analyzer';
-import { Entity, ClassifiedEntity } from '@eip/analyzer';
-export { ClassifiedEntity, Entity } from '@eip/analyzer';
-import { Result } from '@eip/shared';
+import { TaprootConfig } from '@taproot/config';
+import * as _taproot_analyzer from '@taproot/analyzer';
+import { Entity, ClassifiedEntity } from '@taproot/analyzer';
+export { ClassifiedEntity, Entity } from '@taproot/analyzer';
+import { Result } from '@taproot/shared';
 
 declare class Timer {
     private readonly start;
@@ -17,7 +17,7 @@ interface BuildMetrics {
 }
 
 interface CachedRepositoryModel {
-    config: EipConfig;
+    config: TaprootConfig;
     metrics: BuildMetrics;
     knowledgeGraph: KnowledgeGraph;
     components: Array<{
@@ -160,11 +160,11 @@ interface ExplainComponentResult {
 declare function explainComponent(model: RepositoryModel, query: string): ExplainComponentResult | null;
 declare function explain(model: RepositoryModel, entityName: string): {
     name: string;
-    kind: _eip_analyzer.EntityKind;
+    kind: _taproot_analyzer.EntityKind;
     classification: {
         type: string;
         confidence: number;
-        signals: _eip_analyzer.ClassificationSignal[];
+        signals: _taproot_analyzer.ClassificationSignal[];
     }[];
     responsibility: string;
     dependency: DependencySummary;
